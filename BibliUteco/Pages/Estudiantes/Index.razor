@@ -1,0 +1,220 @@
+﻿@page "/estudiantes"
+@using BibliUteco.Models
+@using BibliUteco.Services.Interfaces
+@inject IEstudianteService EstudianteService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+
+<PageTitle>Estudiantes - BibliUteco</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="mb-3 mb-md-0">
+                    <h2 class="fw-bold mb-0">👥 Gestión de Estudiantes</h2>
+                    <p class="text-muted mb-0">Administra los estudiantes registrados</p>
+                </div>
+                <button class="btn btn-primary" @onclick="IrACrear">
+                    <i class="bi bi-plus-circle"></i> Nuevo Estudiante
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" placeholder="Buscar por nombre, matrícula, email o carrera..."
+                       @bind="terminoBusqueda" @bind:event="oninput" @onkeyup="Buscar" />
+                @if (!string.IsNullOrWhiteSpace(terminoBusqueda))
+                {
+                    <button class="btn btn-outline-secondary" @onclick="LimpiarBusqueda">
+                        <i class="bi bi-x"></i>
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (estudiantes == null)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando estudiantes...</p>
+        </div>
+    }
+    else if (!estudiantes.Any())
+    {
+        <div class="alert alert-info text-center" role="alert">
+            <i class="bi bi-info-circle fs-1"></i>
+            <h4 class="mt-3">No hay estudiantes registrados</h4>
+            <p>Comienza agregando un nuevo estudiante haciendo clic en el botón "Nuevo Estudiante"</p>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Matrícula</th>
+                                <th>Nombre Completo</th>
+                                <th>Email</th>
+                                <th>Teléfono</th>
+                                <th>Carrera</th>
+                                <th>Préstamos Activos</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var estudiante in estudiantes)
+                            {
+                                <tr>
+                                    <td><code>@estudiante.Matricula</code></td>
+                                    <td>
+                                        <strong>@estudiante.NombreCompleto</strong>
+                                    </td>
+                                    <td>
+                                        <small>@estudiante.Email</small>
+                                    </td>
+                                    <td>@(estudiante.Telefono ?? "N/A")</td>
+                                    <td>@(estudiante.Carrera ?? "N/A")</td>
+                                    <td>
+                                        @{
+                                            var prestamosActivos = estudiante.Prestamos?.Count(p => p.Estado == "Prestado" || p.Estado == "Atrasado") ?? 0;
+                                        }
+                                        @if (prestamosActivos > 0)
+                                        {
+                                            <span class="badge bg-warning">@prestamosActivos</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">0</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (estudiante.Activo)
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Inactivo</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button class="btn btn-outline-primary" @onclick="() => IrADetalles(estudiante.EstudianteId)" title="Ver detalles">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-warning" @onclick="() => IrAEditar(estudiante.EstudianteId)" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" @onclick="() => ConfirmarEliminar(estudiante)" title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <p class="text-muted">Total de estudiantes: <strong>@estudiantes.Count</strong></p>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Estudiante>? estudiantes;
+    private List<Estudiante>? todosLosEstudiantes;
+    private string terminoBusqueda = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarEstudiantes();
+    }
+
+    private async Task CargarEstudiantes()
+    {
+        todosLosEstudiantes = await EstudianteService.ObtenerActivosAsync();
+        AplicarFiltros();
+    }
+
+    private void AplicarFiltros()
+    {
+        if (todosLosEstudiantes == null) return;
+
+        estudiantes = todosLosEstudiantes;
+
+        if (!string.IsNullOrWhiteSpace(terminoBusqueda))
+        {
+            var termino = terminoBusqueda.ToLower();
+            estudiantes = estudiantes.Where(e =>
+                e.Nombre.ToLower().Contains(termino) ||
+                e.Apellido.ToLower().Contains(termino) ||
+                e.Matricula.ToLower().Contains(termino) ||
+                e.Email.ToLower().Contains(termino) ||
+                (e.Carrera != null && e.Carrera.ToLower().Contains(termino))
+            ).ToList();
+        }
+    }
+
+    private void Buscar()
+    {
+        AplicarFiltros();
+    }
+
+    private void LimpiarBusqueda()
+    {
+        terminoBusqueda = string.Empty;
+        AplicarFiltros();
+    }
+
+    private void IrACrear()
+    {
+        Navigation.NavigateTo("/estudiantes/crear");
+    }
+
+    private void IrADetalles(int id)
+    {
+        Navigation.NavigateTo($"/estudiantes/detalles/{id}");
+    }
+
+    private void IrAEditar(int id)
+    {
+        Navigation.NavigateTo($"/estudiantes/editar/{id}");
+    }
+
+    private async Task ConfirmarEliminar(Estudiante estudiante)
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm",
+            $"¿Está seguro de eliminar al estudiante '{estudiante.NombreCompleto}'?");
+
+        if (confirmado)
+        {
+            var resultado = await EstudianteService.EliminarAsync(estudiante.EstudianteId);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Estudiante eliminado exitosamente");
+                await CargarEstudiantes();
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "No se pudo eliminar el estudiante. Puede que tenga préstamos activos.");
+            }
+        }
+    }
+}

@@ -1,0 +1,118 @@
+﻿@page "/autores/crear"
+@using BibliUteco.Models
+@using BibliUteco.Services.Interfaces
+@inject IAutorService AutorService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+
+<PageTitle>Crear Autor - BibliUteco</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-person-plus"></i> Crear Nuevo Autor</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@autor" OnValidSubmit="@GuardarAutor">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Nombre *</label>
+                                <InputText @bind-Value="autor.Nombre" class="form-control" placeholder="Ej: Gabriel" />
+                                <ValidationMessage For="@(() => autor.Nombre)" class="text-danger" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Apellido *</label>
+                                <InputText @bind-Value="autor.Apellido" class="form-control" placeholder="Ej: García Márquez" />
+                                <ValidationMessage For="@(() => autor.Apellido)" class="text-danger" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Nacionalidad</label>
+                                <InputText @bind-Value="autor.Nacionalidad" class="form-control" placeholder="Ej: Colombiana" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Fecha de Nacimiento</label>
+                                <InputDate @bind-Value="autor.FechaNacimiento" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Biografía</label>
+                            <InputTextArea @bind-Value="autor.Biografia" class="form-control" rows="4"
+                                           placeholder="Breve descripción del autor..." />
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <InputCheckbox @bind-Value="autor.Activo" class="form-check-input" id="activo" />
+                            <label class="form-check-label" for="activo">
+                                Activo
+                            </label>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@guardando">
+                                @if (guardando)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span>Guardando...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-save"></i>
+                                    <span>Guardar Autor</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Autor autor = new Autor { Activo = true };
+    private bool guardando = false;
+
+    private async Task GuardarAutor()
+    {
+        guardando = true;
+        try
+        {
+            var resultado = await AutorService.CrearAsync(autor);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Autor creado exitosamente");
+                Navigation.NavigateTo("/autores");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Error al crear el autor. Intente nuevamente.");
+            }
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/autores");
+    }
+}

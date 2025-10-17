@@ -1,0 +1,217 @@
+﻿@page "/libros/crear"
+@using BibliUteco.Models
+@using BibliUteco.Services.Interfaces
+@inject ILibroService LibroService
+@inject IAutorService AutorService
+@inject ICategoriaService CategoriaService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+
+<PageTitle>Crear Libro - BibliUteco</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-book"></i> Agregar Nuevo Libro</h3>
+                </div>
+                <div class="card-body">
+                    @if (autores == null || categorias == null)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-3 text-muted">Cargando datos...</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="@libro" OnValidSubmit="@GuardarLibro">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="alert alert-danger" />
+
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label fw-bold">Título *</label>
+                                    <InputText @bind-Value="libro.Titulo" class="form-control" placeholder="Ej: Cien años de soledad" />
+                                    <ValidationMessage For="@(() => libro.Titulo)" class="text-danger" />
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">ISBN *</label>
+                                    <InputText @bind-Value="libro.ISBN" class="form-control" placeholder="Ej: 978-0307474728" />
+                                    <ValidationMessage For="@(() => libro.ISBN)" class="text-danger" />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Autor *</label>
+                                    <InputSelect @bind-Value="libro.AutorId" class="form-select">
+                                        <option value="0">-- Seleccione un autor --</option>
+                                        @foreach (var autor in autores)
+                                        {
+                                            <option value="@autor.AutorId">@autor.NombreCompleto</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => libro.AutorId)" class="text-danger" />
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Categoría *</label>
+                                    <InputSelect @bind-Value="libro.CategoriaId" class="form-select">
+                                        <option value="0">-- Seleccione una categoría --</option>
+                                        @foreach (var categoria in categorias)
+                                        {
+                                            <option value="@categoria.CategoriaId">@categoria.Nombre</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => libro.CategoriaId)" class="text-danger" />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Editorial *</label>
+                                    <InputText @bind-Value="libro.Editorial" class="form-control" placeholder="Ej: Alfaguara" />
+                                    <ValidationMessage For="@(() => libro.Editorial)" class="text-danger" />
+                                </div>
+
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold">Año de Publicación</label>
+                                    <InputNumber @bind-Value="libro.AñoPublicacion" class="form-control" placeholder="Ej: 2020" />
+                                </div>
+
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold">Idioma</label>
+                                    <InputText @bind-Value="libro.Idioma" class="form-control" placeholder="Ej: Español" />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Cantidad Total *</label>
+                                    <InputNumber @bind-Value="libro.CantidadTotal" class="form-control" min="1" />
+                                    <ValidationMessage For="@(() => libro.CantidadTotal)" class="text-danger" />
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Número de Páginas</label>
+                                    <InputNumber @bind-Value="libro.NumeroPaginas" class="form-control" />
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">URL de Imagen</label>
+                                    <InputText @bind-Value="libro.ImagenUrl" class="form-control" placeholder="https://..." />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Descripción</label>
+                                <InputTextArea @bind-Value="libro.Descripcion" class="form-control" rows="4"
+                                               placeholder="Breve descripción del libro..." />
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <InputCheckbox @bind-Value="libro.Activo" class="form-check-input" id="activo" />
+                                <label class="form-check-label" for="activo">
+                                    Activo
+                                </label>
+                            </div>
+
+                            <hr />
+
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary" disabled="@guardando">
+                                    @if (guardando)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Guardando...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-save"></i>
+                                        <span>Guardar Libro</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Libro libro = new Libro { Activo = true, CantidadTotal = 1 };
+    private List<Autor>? autores;
+    private List<Categoria>? categorias;
+    private bool guardando = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        autores = await AutorService.ObtenerActivosAsync();
+        categorias = await CategoriaService.ObtenerActivosAsync();
+    }
+
+    private async Task GuardarLibro()
+    {
+        guardando = true;
+        try
+        {
+            // Validar que se seleccionó un autor y una categoría
+            if (libro.AutorId == 0)
+            {
+                await JS.InvokeVoidAsync("alert", "Por favor seleccione un autor");
+                guardando = false;
+                return;
+            }
+
+            if (libro.CategoriaId == 0)
+            {
+                await JS.InvokeVoidAsync("alert", "Por favor seleccione una categoría");
+                guardando = false;
+                return;
+            }
+
+            // Verificar si el ISBN ya existe
+            var existeISBN = await LibroService.ExisteISBNAsync(libro.ISBN);
+            if (existeISBN)
+            {
+                await JS.InvokeVoidAsync("alert", "Ya existe un libro con este ISBN");
+                guardando = false;
+                return;
+            }
+
+            var resultado = await LibroService.CrearAsync(libro);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Libro creado exitosamente");
+                Navigation.NavigateTo("/libros");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Error al crear el libro. Intente nuevamente.");
+            }
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/libros");
+    }
+}

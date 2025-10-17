@@ -1,0 +1,255 @@
+﻿@page "/usuarios"
+@using Microsoft.AspNetCore.Identity
+@using BibliUteco.Models
+@using Microsoft.AspNetCore.Authorization
+@inject UserManager<IdentityUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Usuarios - BibliUteco</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-0">👥 Gestión de Usuarios</h2>
+                    <p class="text-muted mb-0">Administra usuarios y roles del sistema</p>
+                </div>
+                <button class="btn btn-primary" @onclick="IrACrear">
+                    <i class="bi bi-plus-circle"></i> Nuevo Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary bg-opacity-10 border-primary">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@totalUsuarios</h3>
+                    <small class="text-muted">Total Usuarios</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger bg-opacity-10 border-danger">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@administradores</h3>
+                    <small class="text-muted">Administradores</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning bg-opacity-10 border-warning">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@bibliotecarios</h3>
+                    <small class="text-muted">Bibliotecarios</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    @if (usuarios == null)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando usuarios...</p>
+        </div>
+    }
+    else if (!usuarios.Any())
+    {
+        <div class="alert alert-info text-center" role="alert">
+            <i class="bi bi-info-circle fs-1"></i>
+            <h4 class="mt-3">No hay usuarios registrados</h4>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Email</th>
+                                <th>Nombre de Usuario</th>
+                                <th>Rol</th>
+                                <th>Email Confirmado</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var usuario in usuarios)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@usuario.Email</strong>
+                                    </td>
+                                    <td>@usuario.UserName</td>
+                                    <td>
+                                        @if (usuario.Rol == "Administrador")
+                                        {
+                                            <span class="badge bg-danger">@usuario.Rol</span>
+                                        }
+                                        else if (usuario.Rol == "Bibliotecario")
+                                        {
+                                            <span class="badge bg-warning text-dark">@usuario.Rol</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Sin rol</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (usuario.EmailConfirmed)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Confirmado
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">
+                                                <i class="bi bi-clock"></i> Pendiente
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (usuario.LockoutEnabled && usuario.LockoutEnd.HasValue && usuario.LockoutEnd > DateTimeOffset.Now)
+                                        {
+                                            <span class="badge bg-danger">Bloqueado</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button class="btn btn-outline-primary" @onclick="() => AsignarRol(usuario.Id)" title="Asignar rol">
+                                                <i class="bi bi-shield-check"></i>
+                                            </button>
+                                            <button class="btn btn-outline-warning" @onclick="() => CambiarEstadoEmail(usuario.Id)" title="Confirmar email">
+                                                <i class="bi bi-envelope-check"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" @onclick="() => ConfirmarEliminar(usuario)" title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <p class="text-muted">Total de usuarios: <strong>@usuarios.Count</strong></p>
+        </div>
+    }
+</div>
+
+@code {
+    private List<UsuarioViewModel>? usuarios;
+    private int totalUsuarios = 0;
+    private int administradores = 0;
+    private int bibliotecarios = 0;
+    //private int lectores = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarUsuarios();
+    }
+
+    private async Task CargarUsuarios()
+    {
+        usuarios = new List<UsuarioViewModel>();
+        var listaUsuarios = UserManager.Users.ToList();
+
+        foreach (var user in listaUsuarios)
+        {
+            var roles = await UserManager.GetRolesAsync(user);
+            var rol = roles.FirstOrDefault() ?? "Sin rol";
+
+            usuarios.Add(new UsuarioViewModel
+            {
+                Id = user.Id,
+                Email = user.Email ?? "",
+                UserName = user.UserName ?? "",
+                Rol = rol,
+                EmailConfirmed = user.EmailConfirmed,
+                LockoutEnabled = user.LockoutEnabled,
+                LockoutEnd = user.LockoutEnd?.UtcDateTime
+            });
+        }
+
+        CalcularEstadisticas();
+    }
+
+    private void CalcularEstadisticas()
+    {
+        if (usuarios == null) return;
+
+        totalUsuarios = usuarios.Count;
+        administradores = usuarios.Count(u => u.Rol == "Administrador");
+        bibliotecarios = usuarios.Count(u => u.Rol == "Bibliotecario");
+        //lectores = usuarios.Count(u => u.Rol == "Lector");
+    }
+
+    private void IrACrear()
+    {
+        Navigation.NavigateTo("/usuarios/crear");
+    }
+
+    private void AsignarRol(string userId)
+    {
+        Navigation.NavigateTo($"/usuarios/asignar-rol/{userId}");
+    }
+
+    private async Task CambiarEstadoEmail(string userId)
+    {
+        var user = await UserManager.FindByIdAsync(userId);
+        if (user != null)
+        {
+            user.EmailConfirmed = !user.EmailConfirmed;
+            await UserManager.UpdateAsync(user);
+            await JS.InvokeVoidAsync("alert", "Estado del email actualizado");
+            await CargarUsuarios();
+        }
+    }
+
+    private async Task ConfirmarEliminar(UsuarioViewModel usuario)
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm",
+            $"¿Está seguro de eliminar al usuario '{usuario.Email}'?");
+
+        if (confirmado)
+        {
+            var user = await UserManager.FindByIdAsync(usuario.Id);
+            if (user != null)
+            {
+                var result = await UserManager.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    await JS.InvokeVoidAsync("alert", "Usuario eliminado exitosamente");
+                    await CargarUsuarios();
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("alert", "Error al eliminar el usuario");
+                }
+            }
+        }
+    }
+}

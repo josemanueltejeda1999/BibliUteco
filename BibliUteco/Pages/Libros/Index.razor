@@ -1,0 +1,247 @@
+﻿@page "/libros"
+@using BibliUteco.Models
+@using BibliUteco.Services.Interfaces
+@inject ILibroService LibroService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+
+<PageTitle>Libros - BibliUteco</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="mb-3 mb-md-0">
+                    <h2 class="fw-bold mb-0">📖 Gestión de Libros</h2>
+                    <p class="text-muted mb-0">Administra el catálogo de libros</p>
+                </div>
+                <button class="btn btn-primary" @onclick="IrACrear">
+                    <i class="bi bi-plus-circle"></i> Nuevo Libro
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" placeholder="Buscar por título, ISBN, autor o editorial..."
+                       @bind="terminoBusqueda" @bind:event="oninput" @onkeyup="Buscar" />
+                @if (!string.IsNullOrWhiteSpace(terminoBusqueda))
+                {
+                    <button class="btn btn-outline-secondary" @onclick="LimpiarBusqueda">
+                        <i class="bi bi-x"></i>
+                    </button>
+                }
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex gap-2 justify-content-md-end mt-3 mt-md-0">
+                <button class="btn @(soloDisponibles ? "btn-success" : "btn-outline-success")" @onclick="ToggleDisponibles">
+                    <i class="bi bi-check-circle"></i> Solo disponibles
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (libros == null)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando libros...</p>
+        </div>
+    }
+    else if (!libros.Any())
+    {
+        <div class="alert alert-info text-center" role="alert">
+            <i class="bi bi-info-circle fs-1"></i>
+            <h4 class="mt-3">No hay libros registrados</h4>
+            <p>Comienza agregando un nuevo libro haciendo clic en el botón "Nuevo Libro"</p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var libro in libros)
+            {
+                <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+                    <div class="card h-100 shadow-sm hover-card">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title mb-0 flex-grow-1">@libro.Titulo</h6>
+                                @if (libro.CantidadDisponible > 0)
+                                {
+                                    <span class="badge bg-success ms-2">Disponible</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger ms-2">Agotado</span>
+                                }
+                            </div>
+
+                            <p class="text-muted small mb-2">
+                                <i class="bi bi-person"></i> @libro.Autor?.NombreCompleto
+                            </p>
+
+                            <p class="text-muted small mb-2">
+                                <i class="bi bi-folder"></i> @libro.Categoria?.Nombre
+                            </p>
+
+                            <p class="text-muted small mb-2">
+                                <i class="bi bi-building"></i> @libro.Editorial
+                            </p>
+
+                            <div class="mb-2">
+                                <span class="badge bg-info">ISBN: @libro.ISBN</span>
+                            </div>
+
+                            @if (libro.AñoPublicacion.HasValue)
+                            {
+                                <p class="text-muted small mb-2">
+                                    <i class="bi bi-calendar"></i> Año: @libro.AñoPublicacion
+                                </p>
+                            }
+
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    Disponibles: <strong class="@(libro.CantidadDisponible > 0 ? "text-success" : "text-danger")">
+                                        @libro.CantidadDisponible
+                                    </strong> / @libro.CantidadTotal
+                                </small>
+                            </div>
+
+                            <div class="mt-auto d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary flex-fill" @onclick="() => IrADetalles(libro.LibroId)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning flex-fill" @onclick="() => IrAEditar(libro.LibroId)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarEliminar(libro)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="mt-3">
+            <p class="text-muted">
+                Total de libros: <strong>@libros.Count</strong> |
+                Disponibles: <strong class="text-success">@libros.Count(l => l.CantidadDisponible > 0)</strong>
+            </p>
+        </div>
+    }
+</div>
+
+<style>
+    .hover-card {
+        transition: all 0.3s ease;
+    }
+
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+</style>
+
+@code {
+    private List<Libro>? libros;
+    private List<Libro>? todosLosLibros;
+    private string terminoBusqueda = string.Empty;
+    private bool soloDisponibles = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarLibros();
+    }
+
+    private async Task CargarLibros()
+    {
+        todosLosLibros = await LibroService.ObtenerActivosAsync();
+        AplicarFiltros();
+    }
+
+    private void AplicarFiltros()
+    {
+        if (todosLosLibros == null) return;
+
+        libros = todosLosLibros;
+
+        // Filtrar por búsqueda
+        if (!string.IsNullOrWhiteSpace(terminoBusqueda))
+        {
+            var termino = terminoBusqueda.ToLower();
+            libros = libros.Where(l =>
+                l.Titulo.ToLower().Contains(termino) ||
+                l.ISBN.ToLower().Contains(termino) ||
+                (l.Autor != null && l.Autor.NombreCompleto.ToLower().Contains(termino)) ||
+                l.Editorial.ToLower().Contains(termino)
+            ).ToList();
+        }
+
+        // Filtrar solo disponibles
+        if (soloDisponibles)
+        {
+            libros = libros.Where(l => l.CantidadDisponible > 0).ToList();
+        }
+    }
+
+    private void Buscar()
+    {
+        AplicarFiltros();
+    }
+
+    private void LimpiarBusqueda()
+    {
+        terminoBusqueda = string.Empty;
+        AplicarFiltros();
+    }
+
+    private void ToggleDisponibles()
+    {
+        soloDisponibles = !soloDisponibles;
+        AplicarFiltros();
+    }
+
+    private void IrACrear()
+    {
+        Navigation.NavigateTo("/libros/crear");
+    }
+
+    private void IrADetalles(int id)
+    {
+        Navigation.NavigateTo($"/libros/detalles/{id}");
+    }
+
+    private void IrAEditar(int id)
+    {
+        Navigation.NavigateTo($"/libros/editar/{id}");
+    }
+
+    private async Task ConfirmarEliminar(Libro libro)
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm",
+            $"¿Está seguro de eliminar el libro '{libro.Titulo}'?");
+
+        if (confirmado)
+        {
+            var resultado = await LibroService.EliminarAsync(libro.LibroId);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Libro eliminado exitosamente");
+                await CargarLibros();
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "No se pudo eliminar el libro. Puede que tenga préstamos activos.");
+            }
+        }
+    }
+}

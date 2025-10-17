@@ -1,0 +1,223 @@
+﻿@page "/usuarios/asignar-rol/{UserId}"
+@using Microsoft.AspNetCore.Identity
+@using BibliUteco.Models
+@using Microsoft.AspNetCore.Authorization
+@inject UserManager<IdentityUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Asignar Rol - BibliUteco</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            @if (modelo == null)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Cargando datos del usuario...</p>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h3 class="mb-0"><i class="bi bi-shield-check"></i> Asignar Rol de Usuario</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-4">
+                            <strong>Usuario:</strong> @modelo.Email
+                            @if (!string.IsNullOrEmpty(modelo.RolActual))
+                            {
+                                <br/>
+                                <strong>Rol actual:</strong> 
+                                <span class="badge @ObtenerClaseRol(modelo.RolActual)">@modelo.RolActual</span>
+                            }
+                            else
+                            {
+                                <br/>
+                                <strong>Rol actual:</strong> <span class="badge bg-secondary">Sin rol asignado</span>
+                            }
+                        </div>
+
+                        <EditForm Model="@modelo" OnValidSubmit="@AsignarRolAsync">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="alert alert-danger" />
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Seleccionar Nuevo Rol *</label>
+                                <InputSelect @bind-Value="modelo.RolSeleccionado" class="form-select">
+                                    <option value="">-- Seleccione un rol --</option>
+                                    @if (modelo.RolesDisponibles != null)
+                                    {
+                                        @foreach (var rol in modelo.RolesDisponibles)
+                                        {
+                                            <option value="@rol">@rol</option>
+                                        }
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => modelo.RolSeleccionado)" class="text-danger" />
+                            </div>
+
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-3">Permisos por Rol:</h6>
+
+                                    <div class="mb-3">
+                                        <strong class="text-danger">👑 Administrador</strong>
+                                        <ul class="mt-2">
+                                            <li>Acceso completo al sistema</li>
+                                            <li>Gestión de usuarios y roles</li>
+                                            <li>Gestión de libros, autores y categorías</li>
+                                            <li>Gestión de préstamos y devoluciones</li>
+                                            <li>Gestión de estudiantes</li>
+                                            <li>Visualización de reportes y estadísticas</li>
+                                            <li>Gestión de multas y pagos</li>
+                                            <li>Configuración del sistema</li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="mb-0">
+                                        <strong class="text-warning">📚 Bibliotecario</strong>
+                                        <ul class="mt-2">
+                                            <li>Gestión de libros, autores y categorías</li>
+                                            <li>Gestión de préstamos y devoluciones</li>
+                                            <li>Gestión de estudiantes</li>
+                                            <li>Registro y gestión de multas</li>
+                                            <li>Visualización de reportes</li>
+                                            <li><strong>Sin acceso a gestión de usuarios</strong></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-warning" disabled="@guardando">
+                                    @if (guardando)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Guardando...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-shield-check"></i>
+                                        <span>Asignar Rol</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string UserId { get; set; } = string.Empty;
+
+    private AsignarRolViewModel? modelo;
+    private bool guardando = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        var usuario = await UserManager.FindByIdAsync(UserId);
+        
+        if (usuario == null)
+        {
+            await JS.InvokeVoidAsync("alert", "Usuario no encontrado");
+            Navigation.NavigateTo("/usuarios");
+            return;
+        }
+
+        var rolesUsuario = await UserManager.GetRolesAsync(usuario);
+        var todosLosRoles = RoleManager.Roles.Select(r => r.Name ?? "").Where(r => !string.IsNullOrEmpty(r)).ToList();
+
+        modelo = new AsignarRolViewModel
+        {
+            UserId = usuario.Id,
+            Email = usuario.Email ?? "",
+            RolActual = rolesUsuario.FirstOrDefault(),
+            RolesDisponibles = todosLosRoles
+        };
+    }
+
+    private async Task AsignarRolAsync()
+    {
+        guardando = true;
+        try
+        {
+            if (string.IsNullOrWhiteSpace(modelo!.RolSeleccionado))
+            {
+                await JS.InvokeVoidAsync("alert", "Por favor seleccione un rol");
+                guardando = false;
+                return;
+            }
+
+            var usuario = await UserManager.FindByIdAsync(UserId);
+            if (usuario == null)
+            {
+                await JS.InvokeVoidAsync("alert", "Usuario no encontrado");
+                guardando = false;
+                return;
+            }
+
+            // Remover todos los roles actuales
+            var rolesActuales = await UserManager.GetRolesAsync(usuario);
+            if (rolesActuales.Any())
+            {
+                await UserManager.RemoveFromRolesAsync(usuario, rolesActuales);
+            }
+
+            // Asignar el nuevo rol
+            var resultado = await UserManager.AddToRoleAsync(usuario, modelo.RolSeleccionado);
+
+            if (resultado.Succeeded)
+            {
+                await JS.InvokeVoidAsync("alert", "Rol asignado exitosamente");
+                Navigation.NavigateTo("/usuarios");
+            }
+            else
+            {
+                var errores = string.Join(", ", resultado.Errors.Select(e => e.Description));
+                await JS.InvokeVoidAsync("alert", $"Error al asignar el rol: {errores}");
+            }
+        }
+        finally
+        {
+            guardando = false;
+            StateHasChanged();
+        }
+    }
+
+    private string ObtenerClaseRol(string rol)
+    {
+        return rol switch
+        {
+            "Administrador" => "bg-danger",
+            "Bibliotecario" => "bg-warning",
+            "Lector" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/usuarios");
+    }
+}

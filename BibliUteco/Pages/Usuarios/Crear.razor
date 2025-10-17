@@ -1,0 +1,148 @@
+﻿@page "/usuarios/crear"
+@using Microsoft.AspNetCore.Identity
+@using BibliUteco.Models
+@using Microsoft.AspNetCore.Authorization
+@inject UserManager<IdentityUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Crear Usuario - BibliUteco</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-person-plus"></i> Crear Nuevo Usuario</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@modelo" OnValidSubmit="@CrearUsuario">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email *</label>
+                            <InputText @bind-Value="modelo.Email" class="form-control" placeholder="ejemplo@correo.com" type="email" />
+                            <ValidationMessage For="@(() => modelo.Email)" class="text-danger" />
+                            <small class="text-muted">Este será el nombre de usuario para iniciar sesión</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contraseña *</label>
+                            <InputText @bind-Value="modelo.Password" class="form-control" type="password" placeholder="Mínimo 6 caracteres" />
+                            <ValidationMessage For="@(() => modelo.Password)" class="text-danger" />
+                            <small class="text-muted">Debe tener al menos 6 caracteres</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Confirmar Contraseña *</label>
+                            <InputText @bind-Value="modelo.ConfirmPassword" class="form-control" type="password" placeholder="Repita la contraseña" />
+                            <ValidationMessage For="@(() => modelo.ConfirmPassword)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Rol *</label>
+                            <InputSelect @bind-Value="modelo.Rol" class="form-select">
+                                <option value="">-- Seleccione un rol --</option>
+                                <option value="Administrador">Administrador</option>
+                                <option value="Bibliotecario">Bibliotecario</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => modelo.Rol)" class="text-danger" />
+                        </div>
+
+                        <div class="alert alert-info">
+                            <strong>Descripción de roles:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Administrador:</strong> Acceso completo al sistema, gestiona usuarios, roles y todas las funcionalidades.</li>
+                                <li><strong>Bibliotecario:</strong> Gestiona libros, autores, categorías, préstamos, devoluciones, estudiantes y reportes.</li>
+                            </ul>
+                        </div>
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@guardando">
+                                @if (guardando)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span>Guardando...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-save"></i>
+                                    <span>Crear Usuario</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CrearUsuarioViewModel modelo = new CrearUsuarioViewModel();
+    private bool guardando = false;
+
+    private async Task CrearUsuario()
+    {
+        guardando = true;
+        try
+        {
+            // Validar que se seleccionó un rol
+            if (string.IsNullOrWhiteSpace(modelo.Rol))
+            {
+                await JS.InvokeVoidAsync("alert", "Por favor seleccione un rol");
+                guardando = false;
+                return;
+            }
+
+            // Verificar si el email ya existe
+            var usuarioExistente = await UserManager.FindByEmailAsync(modelo.Email);
+            if (usuarioExistente != null)
+            {
+                await JS.InvokeVoidAsync("alert", "Ya existe un usuario con este email");
+                guardando = false;
+                return;
+            }
+
+            // Crear el usuario
+            var nuevoUsuario = new IdentityUser
+            {
+                UserName = modelo.Email,
+                Email = modelo.Email,
+                EmailConfirmed = true
+            };
+
+            var resultado = await UserManager.CreateAsync(nuevoUsuario, modelo.Password);
+
+            if (resultado.Succeeded)
+            {
+                // Asignar el rol
+                await UserManager.AddToRoleAsync(nuevoUsuario, modelo.Rol);
+
+                await JS.InvokeVoidAsync("alert", "Usuario creado exitosamente");
+                Navigation.NavigateTo("/usuarios");
+            }
+            else
+            {
+                var errores = string.Join(", ", resultado.Errors.Select(e => e.Description));
+                await JS.InvokeVoidAsync("alert", $"Error al crear el usuario: {errores}");
+            }
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/usuarios");
+    }
+}

@@ -1,0 +1,129 @@
+﻿@page "/categorias/editar/{Id:int}"
+@using BibliUteco.Models
+@using BibliUteco.Services.Interfaces
+@inject ICategoriaService CategoriaService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+
+<PageTitle>Editar Categoría - BibliUteco</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            @if (categoria == null)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Cargando datos de la categoría...</p>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h3 class="mb-0"><i class="bi bi-pencil-square"></i> Editar Categoría</h3>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="@categoria" OnValidSubmit="@ActualizarCategoria">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="alert alert-danger" />
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nombre *</label>
+                                <InputText @bind-Value="categoria.Nombre" class="form-control" placeholder="Ej: Ficción" />
+                                <ValidationMessage For="@(() => categoria.Nombre)" class="text-danger" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Descripción</label>
+                                <InputTextArea @bind-Value="categoria.Descripcion" class="form-control" rows="4"
+                                               placeholder="Breve descripción de la categoría..." />
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <InputCheckbox @bind-Value="categoria.Activo" class="form-check-input" id="activo" />
+                                <label class="form-check-label" for="activo">
+                                    Activo
+                                </label>
+                            </div>
+
+                            <hr />
+
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-warning" disabled="@guardando">
+                                    @if (guardando)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Guardando...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-save"></i>
+                                        <span>Actualizar Categoría</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Categoria? categoria;
+    private bool guardando = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarCategoria();
+    }
+
+    private async Task CargarCategoria()
+    {
+        categoria = await CategoriaService.ObtenerPorIdAsync(Id);
+
+        if (categoria == null)
+        {
+            await JS.InvokeVoidAsync("alert", "Categoría no encontrada");
+            Navigation.NavigateTo("/categorias");
+        }
+    }
+
+    private async Task ActualizarCategoria()
+    {
+        guardando = true;
+        try
+        {
+            var resultado = await CategoriaService.ActualizarAsync(categoria!);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Categoría actualizada exitosamente");
+                Navigation.NavigateTo("/categorias");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Error al actualizar la categoría. Intente nuevamente.");
+            }
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/categorias");
+    }
+}

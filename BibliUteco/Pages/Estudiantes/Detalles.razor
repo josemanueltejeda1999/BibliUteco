@@ -1,0 +1,285 @@
+﻿@page "/estudiantes/detalles/{Id:int}"
+@using BibliUteco.Models
+@using BibliUteco.Services.Interfaces
+@inject IEstudianteService EstudianteService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize]
+
+<PageTitle>Detalles del Estudiante - BibliUteco</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            @if (estudiante == null)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Cargando datos del estudiante...</p>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h3 class="mb-0"><i class="bi bi-person-badge"></i> Detalles del Estudiante</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <h5 class="text-muted mb-3">Información Personal</h5>
+                                
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">ID</label>
+                                    <p class="mb-0">@estudiante.EstudianteId</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Nombre Completo</label>
+                                    <p class="mb-0 fs-5">@estudiante.NombreCompleto</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Matrícula</label>
+                                    <p class="mb-0"><code class="fs-6">@estudiante.Matricula</code></p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Email</label>
+                                    <p class="mb-0">
+                                        <a href="mailto:@estudiante.Email">@estudiante.Email</a>
+                                    </p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Teléfono</label>
+                                    <p class="mb-0">@(estudiante.Telefono ?? "No especificado")</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Fecha de Nacimiento</label>
+                                    <p class="mb-0">@(estudiante.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "No especificada")</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <h5 class="text-muted mb-3">Información Académica</h5>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Carrera</label>
+                                    <p class="mb-0">@(estudiante.Carrera ?? "No especificada")</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Dirección</label>
+                                    <p class="mb-0">@(estudiante.Direccion ?? "No especificada")</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Estado</label>
+                                    <p class="mb-0">
+                                        @if (estudiante.Activo)
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Inactivo</span>
+                                        }
+                                    </p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Fecha de Registro</label>
+                                    <p class="mb-0">@estudiante.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="mb-4">
+                            <h5 class="text-muted mb-3">
+                                <i class="bi bi-book-half"></i> Historial de Préstamos 
+                                <span class="badge bg-primary">@(estudiante.Prestamos?.Count ?? 0)</span>
+                            </h5>
+
+                            @if (estudiante.Prestamos == null || !estudiante.Prestamos.Any())
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> Este estudiante no tiene préstamos registrados aún.
+                                </div>
+                            }
+                            else
+                            {
+                                var prestamosActivos = estudiante.Prestamos.Where(p => p.Estado == "Prestado" || p.Estado == "Atrasado").Count();
+                                var prestamosDevueltos = estudiante.Prestamos.Where(p => p.Estado == "Devuelto").Count();
+                                var prestamosAtrasados = estudiante.Prestamos.Where(p => p.EstaAtrasado).Count();
+
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <div class="card bg-warning bg-opacity-10 border-warning">
+                                            <div class="card-body text-center">
+                                                <h3 class="mb-0">@prestamosActivos</h3>
+                                                <small class="text-muted">Préstamos Activos</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-success bg-opacity-10 border-success">
+                                            <div class="card-body text-center">
+                                                <h3 class="mb-0">@prestamosDevueltos</h3>
+                                                <small class="text-muted">Devueltos</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-danger bg-opacity-10 border-danger">
+                                            <div class="card-body text-center">
+                                                <h3 class="mb-0">@prestamosAtrasados</h3>
+                                                <small class="text-muted">Atrasados</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Libro</th>
+                                                <th>Fecha Préstamo</th>
+                                                <th>Fecha Devolución Esperada</th>
+                                                <th>Fecha Devolución Real</th>
+                                                <th>Estado</th>
+                                                <th>Multa</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var prestamo in estudiante.Prestamos.OrderByDescending(p => p.FechaPrestamo))
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <strong>@(prestamo.Libro?.Titulo ?? "N/A")</strong><br/>
+                                                        <small class="text-muted">@(prestamo.Libro?.Autor?.NombreCompleto ?? "N/A")</small>
+                                                    </td>
+                                                    <td>@prestamo.FechaPrestamo.ToString("dd/MM/yyyy")</td>
+                                                    <td>@prestamo.FechaDevolucionEsperada.ToString("dd/MM/yyyy")</td>
+                                                    <td>
+                                                        @if (prestamo.FechaDevolucionReal.HasValue)
+                                                        {
+                                                            @prestamo.FechaDevolucionReal.Value.ToString("dd/MM/yyyy")
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">-</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (prestamo.Estado == "Prestado")
+                                                        {
+                                                            <span class="badge bg-warning">Prestado</span>
+                                                        }
+                                                        else if (prestamo.Estado == "Devuelto")
+                                                        {
+                                                            <span class="badge bg-success">Devuelto</span>
+                                                        }
+                                                        else if (prestamo.Estado == "Atrasado")
+                                                        {
+                                                            <span class="badge bg-danger">Atrasado</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (prestamo.MultaPorRetraso.HasValue && prestamo.MultaPorRetraso > 0)
+                                                        {
+                                                            <span class="text-danger">RD$ @prestamo.MultaPorRetraso.Value.ToString("N2")</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">-</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-secondary" @onclick="Volver">
+                                <i class="bi bi-arrow-left"></i> Volver
+                            </button>
+                            <div>
+                                <button class="btn btn-warning me-2" @onclick="IrAEditar">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </button>
+                                <button class="btn btn-danger" @onclick="ConfirmarEliminar">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Estudiante? estudiante;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarEstudiante();
+    }
+
+    private async Task CargarEstudiante()
+    {
+        estudiante = await EstudianteService.ObtenerPorIdAsync(Id);
+        
+        if (estudiante == null)
+        {
+            await JS.InvokeVoidAsync("alert", "Estudiante no encontrado");
+            Navigation.NavigateTo("/estudiantes");
+        }
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/estudiantes");
+    }
+
+    private void IrAEditar()
+    {
+        Navigation.NavigateTo($"/estudiantes/editar/{Id}");
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", 
+            $"¿Está seguro de eliminar al estudiante '{estudiante!.NombreCompleto}'?");
+
+        if (confirmado)
+        {
+            var resultado = await EstudianteService.EliminarAsync(Id);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Estudiante eliminado exitosamente");
+                Navigation.NavigateTo("/estudiantes");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "No se pudo eliminar el estudiante. Puede que tenga préstamos activos.");
+            }
+        }
+    }
+}

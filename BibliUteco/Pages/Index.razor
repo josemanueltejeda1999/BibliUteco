@@ -1,0 +1,255 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<IdentityUser> UserManager
+
+<PageTitle>Inicio - BibliUteco</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        @if (rolUsuario != null)
+        {
+            @if (rolUsuario == "Administrador")
+            {
+                <div class="container-fluid py-4">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-success">
+                                <h4><i class="bi bi-shield-check"></i> Bienvenido, Administrador</h4>
+                                <p class="mb-0">Tienes acceso completo al sistema. Gestiona usuarios, libros, préstamos y más.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <a href="/dashboard" class="text-decoration-none">
+                            <div class="card bg-info bg-opacity-10 border-info h-100 hover-card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-speedometer2 text-info" style="font-size: 3rem;"></i>
+                                    <h5 class="card-title mt-3">Dashboard</h5>
+                                    <p class="card-text text-muted">Estadísticas y reportes</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6 col-lg-3">
+                            <a href="/usuarios" class="text-decoration-none">
+                                <div class="card bg-danger bg-opacity-10 border-danger h-100 hover-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-people text-danger" style="font-size: 3rem;"></i>
+                                        <h5 class="card-title mt-3">Usuarios</h5>
+                                        <p class="card-text text-muted">Gestionar usuarios y roles</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-md-6 col-lg-3">
+                            <a href="/libros" class="text-decoration-none">
+                                <div class="card bg-primary bg-opacity-10 border-primary h-100 hover-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-book text-primary" style="font-size: 3rem;"></i>
+                                        <h5 class="card-title mt-3">Libros</h5>
+                                        <p class="card-text text-muted">Gestionar catálogo de libros</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-md-6 col-lg-3">
+                            <a href="/prestamos" class="text-decoration-none">
+                                <div class="card bg-warning bg-opacity-10 border-warning h-100 hover-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-clipboard-check text-warning" style="font-size: 3rem;"></i>
+                                        <h5 class="card-title mt-3">Préstamos</h5>
+                                        <p class="card-text text-muted">Gestionar préstamos</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-md-6 col-lg-3">
+                            <a href="/estudiantes" class="text-decoration-none">
+                                <div class="card bg-success bg-opacity-10 border-success h-100 hover-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-person-badge text-success" style="font-size: 3rem;"></i>
+                                        <h5 class="card-title mt-3">Estudiantes</h5>
+                                        <p class="card-text text-muted">Gestionar estudiantes</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="/dashboard" class="text-decoration-none">
+                        <div class="card bg-info bg-opacity-10 border-info h-100 hover-card">
+                            <div class="card-body text-center">
+                                <i class="bi bi-speedometer2 text-info" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Dashboard</h5>
+                                <p class="card-text text-muted">Ver estadísticas</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+            else if (rolUsuario == "Bibliotecario")
+            {
+                <div class="container-fluid py-4">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <h4><i class="bi bi-book"></i> Bienvenido, Bibliotecario</h4>
+                                <p class="mb-0">Gestiona el catálogo de libros, préstamos y estudiantes.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6 col-lg-4">
+                            <a href="/libros" class="text-decoration-none">
+                                <div class="card bg-primary bg-opacity-10 border-primary h-100 hover-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-book text-primary" style="font-size: 3rem;"></i>
+                                        <h5 class="card-title mt-3">Libros</h5>
+                                        <p class="card-text text-muted">Gestionar catálogo</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-md-6 col-lg-4">
+                            <a href="/prestamos" class="text-decoration-none">
+                                <div class="card bg-warning bg-opacity-10 border-warning h-100 hover-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-clipboard-check text-warning" style="font-size: 3rem;"></i>
+                                        <h5 class="card-title mt-3">Préstamos</h5>
+                                        <p class="card-text text-muted">Gestionar préstamos</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-md-6 col-lg-4">
+                            <a href="/estudiantes" class="text-decoration-none">
+                                <div class="card bg-success bg-opacity-10 border-success h-100 hover-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-person-badge text-success" style="font-size: 3rem;"></i>
+                                        <h5 class="card-title mt-3">Estudiantes</h5>
+                                        <p class="card-text text-muted">Gestionar estudiantes</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+           
+        }
+        else
+        {
+            <div class="container py-5">
+                <div class="alert alert-warning">
+                    <h4><i class="bi bi-exclamation-triangle"></i> Sin Rol Asignado</h4>
+                    <p class="mb-0">Tu cuenta no tiene un rol asignado. Contacta al administrador.</p>
+                </div>
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <div class="card shadow-lg">
+                        <div class="card-body p-5">
+                            <i class="bi bi-book-half text-primary" style="font-size: 100px;"></i>
+                            <h1 class="display-4 mt-4">Bienvenido a BibliUteco</h1>
+                            <p class="lead text-muted mt-3">
+                                Sistema de Gestión de Biblioteca Universitaria
+                            </p>
+                            <hr class="my-4" />
+                            <p class="mb-4">
+                                Gestiona préstamos, catálogos de libros y usuarios de manera eficiente.
+                            </p>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                                <a href="/Identity/Account/Login" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                                </a>
+                                <a href="/Identity/Account/Register" class="btn btn-outline-primary btn-lg">
+                                    <i class="bi bi-person-plus"></i> Registrarse
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-5 g-4">
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-book text-primary" style="font-size: 3rem;"></i>
+                                    <h5 class="mt-3">Catálogo Digital</h5>
+                                    <p class="text-muted">Acceso a miles de libros</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-calendar-check text-success" style="font-size: 3rem;"></i>
+                                    <h5 class="mt-3">Préstamos Rápidos</h5>
+                                    <p class="text-muted">Sistema ágil y eficiente</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-graph-up text-warning" style="font-size: 3rem;"></i>
+                                    <h5 class="mt-3">Reportes</h5>
+                                    <p class="text-muted">Estadísticas en tiempo real</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+<style>
+    .hover-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .hover-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
+        }
+</style>
+
+@code {
+    private string? rolUsuario;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            // Evitar llamadas a UserManager para prevenir uso concurrente del DbContext.
+            rolUsuario = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value;
+
+            if (string.IsNullOrEmpty(rolUsuario))
+            {
+                if (user.IsInRole("Administrador")) rolUsuario = "Administrador";
+                else if (user.IsInRole("Bibliotecario")) rolUsuario = "Bibliotecario";
+               // else if (user.IsInRole("Lector")) rolUsuario = "Lector";
+            }
+        }
+    }
+}

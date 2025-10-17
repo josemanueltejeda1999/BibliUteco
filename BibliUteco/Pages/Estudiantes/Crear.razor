@@ -1,0 +1,155 @@
+﻿@page "/estudiantes/crear"
+@using BibliUteco.Models
+@using BibliUteco.Services.Interfaces
+@inject IEstudianteService EstudianteService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+
+<PageTitle>Crear Estudiante - BibliUteco</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-person-plus"></i> Registrar Nuevo Estudiante</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@estudiante" OnValidSubmit="@GuardarEstudiante">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Nombre *</label>
+                                <InputText @bind-Value="estudiante.Nombre" class="form-control" placeholder="Ej: Juan" />
+                                <ValidationMessage For="@(() => estudiante.Nombre)" class="text-danger" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Apellido *</label>
+                                <InputText @bind-Value="estudiante.Apellido" class="form-control" placeholder="Ej: Pérez" />
+                                <ValidationMessage For="@(() => estudiante.Apellido)" class="text-danger" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Matrícula *</label>
+                                <InputText @bind-Value="estudiante.Matricula" class="form-control" placeholder="Ej: 2024-0001" />
+                                <ValidationMessage For="@(() => estudiante.Matricula)" class="text-danger" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Email *</label>
+                                <InputText @bind-Value="estudiante.Email" class="form-control" type="email" placeholder="ejemplo@correo.com" />
+                                <ValidationMessage For="@(() => estudiante.Email)" class="text-danger" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Teléfono</label>
+                                <InputText @bind-Value="estudiante.Telefono" class="form-control" placeholder="(809) 000-0000" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Fecha de Nacimiento</label>
+                                <InputDate @bind-Value="estudiante.FechaNacimiento" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Carrera</label>
+                            <InputText @bind-Value="estudiante.Carrera" class="form-control" placeholder="Ej: Ingeniería de Sistemas" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Dirección</label>
+                            <InputTextArea @bind-Value="estudiante.Direccion" class="form-control" rows="2"
+                                           placeholder="Dirección completa del estudiante..." />
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <InputCheckbox @bind-Value="estudiante.Activo" class="form-check-input" id="activo" />
+                            <label class="form-check-label" for="activo">
+                                Activo
+                            </label>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@guardando">
+                                @if (guardando)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span>Guardando...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-save"></i>
+                                    <span>Guardar Estudiante</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Estudiante estudiante = new Estudiante { Activo = true };
+    private bool guardando = false;
+
+    private async Task GuardarEstudiante()
+    {
+        guardando = true;
+        try
+        {
+            // Verificar si la matrícula ya existe
+            var existeMatricula = await EstudianteService.ExisteMatriculaAsync(estudiante.Matricula);
+            if (existeMatricula)
+            {
+                await JS.InvokeVoidAsync("alert", "Ya existe un estudiante con esta matrícula");
+                guardando = false;
+                return;
+            }
+
+            // Verificar si el email ya existe
+            var existeEmail = await EstudianteService.ExisteEmailAsync(estudiante.Email);
+            if (existeEmail)
+            {
+                await JS.InvokeVoidAsync("alert", "Ya existe un estudiante con este email");
+                guardando = false;
+                return;
+            }
+
+            var resultado = await EstudianteService.CrearAsync(estudiante);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Estudiante registrado exitosamente");
+                Navigation.NavigateTo("/estudiantes");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Error al registrar el estudiante. Intente nuevamente.");
+            }
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/estudiantes");
+    }
+}

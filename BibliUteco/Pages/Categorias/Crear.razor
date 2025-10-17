@@ -1,0 +1,98 @@
+﻿@page "/categorias/crear"
+@using BibliUteco.Models
+@using BibliUteco.Services.Interfaces
+@inject ICategoriaService CategoriaService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+
+<PageTitle>Crear Categoría - BibliUteco</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-folder-plus"></i> Crear Nueva Categoría</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@categoria" OnValidSubmit="@GuardarCategoria">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre *</label>
+                            <InputText @bind-Value="categoria.Nombre" class="form-control" placeholder="Ej: Ficción" />
+                            <ValidationMessage For="@(() => categoria.Nombre)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Descripción</label>
+                            <InputTextArea @bind-Value="categoria.Descripcion" class="form-control" rows="4"
+                                           placeholder="Breve descripción de la categoría..." />
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <InputCheckbox @bind-Value="categoria.Activo" class="form-check-input" id="activo" />
+                            <label class="form-check-label" for="activo">
+                                Activo
+                            </label>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@guardando">
+                                @if (guardando)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span>Guardando...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-save"></i>
+                                    <span>Guardar Categoría</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Categoria categoria = new Categoria { Activo = true };
+    private bool guardando = false;
+
+    private async Task GuardarCategoria()
+    {
+        guardando = true;
+        try
+        {
+            var resultado = await CategoriaService.CrearAsync(categoria);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Categoría creada exitosamente");
+                Navigation.NavigateTo("/categorias");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Error al crear la categoría. Intente nuevamente.");
+            }
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/categorias");
+    }
+}

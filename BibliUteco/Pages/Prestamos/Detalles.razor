@@ -1,0 +1,319 @@
+﻿@page "/prestamos/detalles/{Id:int}"
+@using BibliUteco.Models
+@using BibliUteco.Services.Interfaces
+@inject IPrestamoService PrestamoService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize]
+
+<PageTitle>Detalles del Préstamo - BibliUteco</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            @if (prestamo == null)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Cargando datos del préstamo...</p>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0"><i class="bi bi-clipboard-check"></i> Detalles del Préstamo #@prestamo.PrestamoId</h3>
+                            @if (prestamo.Estado == "Prestado")
+                            {
+                                <span class="badge bg-warning fs-6">Prestado</span>
+                            }
+                            else if (prestamo.Estado == "Devuelto")
+                            {
+                                <span class="badge bg-success fs-6">Devuelto</span>
+                            }
+                            else if (prestamo.Estado == "Atrasado")
+                            {
+                                <span class="badge bg-danger fs-6">Atrasado</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <h5 class="text-muted mb-3"><i class="bi bi-person"></i> Información del Estudiante</h5>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">NOMBRE COMPLETO</label>
+                                    <p class="mb-0 fs-5">@prestamo.Estudiante?.NombreCompleto</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">MATRÍCULA</label>
+                                    <p class="mb-0"><code class="fs-6">@prestamo.Estudiante?.Matricula</code></p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">EMAIL</label>
+                                    <p class="mb-0">
+                                        <a href="mailto:@prestamo.Estudiante?.Email">@prestamo.Estudiante?.Email</a>
+                                    </p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">CARRERA</label>
+                                    <p class="mb-0">@(prestamo.Estudiante?.Carrera ?? "No especificada")</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <h5 class="text-muted mb-3"><i class="bi bi-book"></i> Información del Libro</h5>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">TÍTULO</label>
+                                    <p class="mb-0 fs-5">@prestamo.Libro?.Titulo</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">AUTOR</label>
+                                    <p class="mb-0">@prestamo.Libro?.Autor?.NombreCompleto</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">ISBN</label>
+                                    <p class="mb-0"><code>@prestamo.Libro?.ISBN</code></p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">EDITORIAL</label>
+                                    <p class="mb-0">@prestamo.Libro?.Editorial</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">CATEGORÍA</label>
+                                    <p class="mb-0">@prestamo.Libro?.Categoria?.Nombre</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="row">
+                            <div class="col-md-12 mb-4">
+                                <h5 class="text-muted mb-3"><i class="bi bi-calendar"></i> Información del Préstamo</h5>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="fw-bold text-muted small">FECHA DE PRÉSTAMO</label>
+                                        <p class="mb-0">
+                                            <i class="bi bi-calendar-check text-primary"></i>
+                                            @prestamo.FechaPrestamo.ToString("dd/MM/yyyy HH:mm")
+                                        </p>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="fw-bold text-muted small">FECHA DE DEVOLUCIÓN ESPERADA</label>
+                                        <p class="mb-0">
+                                            <i class="bi bi-calendar-event text-warning"></i>
+                                            @prestamo.FechaDevolucionEsperada.ToString("dd/MM/yyyy")
+                                        </p>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="fw-bold text-muted small">FECHA DE DEVOLUCIÓN REAL</label>
+                                        <p class="mb-0">
+                                            @if (prestamo.FechaDevolucionReal.HasValue)
+                                            {
+                                                <i class="bi bi-calendar-check text-success"></i>
+                                                @prestamo.FechaDevolucionReal.Value.ToString("dd/MM/yyyy HH:mm")
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Aún no devuelto</span>
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="fw-bold text-muted small">ESTADO</label>
+                                        <p class="mb-0">
+                                            @if (prestamo.Estado == "Prestado")
+                                            {
+                                                <span class="badge bg-warning fs-6">Prestado</span>
+                                            }
+                                            else if (prestamo.Estado == "Devuelto")
+                                            {
+                                                <span class="badge bg-success fs-6">Devuelto</span>
+                                            }
+                                            else if (prestamo.Estado == "Atrasado")
+                                            {
+                                                <span class="badge bg-danger fs-6">Atrasado</span>
+                                            }
+                                        </p>
+                                    </div>
+
+                                    @if (prestamo.Estado != "Devuelto")
+                                    {
+                                        var diasRestantes = (prestamo.FechaDevolucionEsperada - DateTime.Now).Days;
+                                        <div class="col-md-4 mb-3">
+                                            <label class="fw-bold text-muted small">DÍAS RESTANTES / ATRASADOS</label>
+                                            <p class="mb-0">
+                                                @if (diasRestantes < 0)
+                                                {
+                                                    <span class="badge bg-danger fs-6">@Math.Abs(diasRestantes) días atrasado</span>
+                                                }
+                                                else if (diasRestantes == 0)
+                                                {
+                                                    <span class="badge bg-warning fs-6">Vence hoy</span>
+                                                }
+                                                else if (diasRestantes <= 3)
+                                                {
+                                                    <span class="badge bg-warning fs-6">@diasRestantes días restantes</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success fs-6">@diasRestantes días restantes</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    }
+
+                                    @if (prestamo.MultaPorRetraso.HasValue && prestamo.MultaPorRetraso > 0)
+                                    {
+                                        <div class="col-md-4 mb-3">
+                                            <label class="fw-bold text-muted small">MULTA POR RETRASO</label>
+                                            <p class="mb-0">
+                                                <span class="text-danger fw-bold fs-5">RD$ @prestamo.MultaPorRetraso.Value.ToString("N2")</span>
+                                            </p>
+                                        </div>
+                                    }
+                                    else if (prestamo.Estado != "Devuelto" && prestamo.DiasRetraso > 0)
+                                    {
+                                        <div class="col-md-4 mb-3">
+                                            <label class="fw-bold text-muted small">MULTA ESTIMADA</label>
+                                            <p class="mb-0">
+                                                <span class="text-danger fw-bold fs-5">RD$ @((prestamo.DiasRetraso * 50).ToString("N2"))</span>
+                                            </p>
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(prestamo.Observaciones))
+                                {
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-muted small">OBSERVACIONES</label>
+                                        <p class="mb-0">@prestamo.Observaciones</p>
+                                    </div>
+                                }
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">FECHA DE REGISTRO</label>
+                                    <p class="mb-0">@prestamo.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (prestamo.Estado != "Devuelto")
+                        {
+                            <div class="alert alert-warning">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Nota:</strong> Las multas se calculan a razón de RD$ 50.00 por día de retraso.
+                            </div>
+                        }
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-secondary" @onclick="Volver">
+                                <i class="bi bi-arrow-left"></i> Volver
+                            </button>
+                            <div>
+                                @if (prestamo.Estado != "Devuelto")
+                                {
+                                    <button class="btn btn-success me-2" @onclick="ConfirmarDevolucion">
+                                        <i class="bi bi-check-circle"></i> Devolver Libro
+                                    </button>
+                                }
+                                <button class="btn btn-danger" @onclick="ConfirmarEliminar">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Prestamo? prestamo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarPrestamo();
+    }
+
+    private async Task CargarPrestamo()
+    {
+        prestamo = await PrestamoService.ObtenerPorIdAsync(Id);
+
+        if (prestamo == null)
+        {
+            await JS.InvokeVoidAsync("alert", "Préstamo no encontrado");
+            Navigation.NavigateTo("/prestamos");
+        }
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/prestamos");
+    }
+
+    private async Task ConfirmarDevolucion()
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm",
+            $"¿Confirmar devolución del libro '{prestamo!.Libro?.Titulo}'?");
+
+        if (confirmado)
+        {
+            var resultado = await PrestamoService.DevolverLibroAsync(Id);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Libro devuelto exitosamente");
+                Navigation.NavigateTo("/prestamos");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Error al devolver el libro. Intente nuevamente.");
+            }
+        }
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm",
+            $"¿Está seguro de eliminar este préstamo?");
+
+        if (confirmado)
+        {
+            var resultado = await PrestamoService.EliminarAsync(Id);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Préstamo eliminado exitosamente");
+                Navigation.NavigateTo("/prestamos");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Error al eliminar el préstamo.");
+            }
+        }
+    }
+}

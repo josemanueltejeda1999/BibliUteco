@@ -1,0 +1,254 @@
+﻿@page "/prestamos/crear"
+@using BibliUteco.Models
+@using BibliUteco.Services.Interfaces
+@inject IPrestamoService PrestamoService
+@inject ILibroService LibroService
+@inject IEstudianteService EstudianteService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+
+<PageTitle>Crear Préstamo - BibliUteco</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-clipboard-check"></i> Registrar Nuevo Préstamo</h3>
+                </div>
+                <div class="card-body">
+                    @if (estudiantes == null || libros == null)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-3 text-muted">Cargando datos...</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="@prestamo" OnValidSubmit="@GuardarPrestamo">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="alert alert-danger" />
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Estudiante *</label>
+                                <InputSelect @bind-Value="prestamo.EstudianteId" class="form-select" @onchange="OnEstudianteSeleccionado">
+                                    <option value="0">-- Seleccione un estudiante --</option>
+                                    @foreach (var estudiante in estudiantes)
+                                    {
+                                        <option value="@estudiante.EstudianteId">
+                                            @estudiante.NombreCompleto - @estudiante.Matricula
+                                        </option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => prestamo.EstudianteId)" class="text-danger" />
+                            </div>
+
+                            @if (estudianteSeleccionado != null)
+                            {
+                                <div class="alert alert-info mb-3">
+                                    <strong>Información del estudiante:</strong><br />
+                                    Email: @estudianteSeleccionado.Email<br />
+                                    Carrera: @(estudianteSeleccionado.Carrera ?? "N/A")<br />
+                                    Préstamos activos: <strong>@ObtenerPrestamosActivos(estudianteSeleccionado)</strong>
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Libro *</label>
+                                <InputSelect @bind-Value="prestamo.LibroId" class="form-select" @onchange="OnLibroSeleccionado">
+                                    <option value="0">-- Seleccione un libro --</option>
+                                    @foreach (var libro in libros)
+                                    {
+                                        <option value="@libro.LibroId">
+                                            @libro.Titulo - @libro.Autor?.NombreCompleto (Disponibles: @libro.CantidadDisponible)
+                                        </option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => prestamo.LibroId)" class="text-danger" />
+                            </div>
+
+                            @if (libroSeleccionado != null)
+                            {
+                                <div class="alert alert-@(libroSeleccionado.CantidadDisponible > 0 ? "success" : "danger") mb-3">
+                                    <strong>Información del libro:</strong><br />
+                                    ISBN: @libroSeleccionado.ISBN<br />
+                                    Editorial: @libroSeleccionado.Editorial<br />
+                                    Categoría: @libroSeleccionado.Categoria?.Nombre<br />
+                                    Disponibles: <strong>@libroSeleccionado.CantidadDisponible / @libroSeleccionado.CantidadTotal</strong>
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Fecha de Préstamo *</label>
+                                    <InputDate @bind-Value="prestamo.FechaPrestamo" class="form-control" />
+                                    <ValidationMessage For="@(() => prestamo.FechaPrestamo)" class="text-danger" />
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Fecha de Devolución Esperada *</label>
+                                    <InputDate @bind-Value="prestamo.FechaDevolucionEsperada" class="form-control" />
+                                    <ValidationMessage For="@(() => prestamo.FechaDevolucionEsperada)" class="text-danger" />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Días de préstamo</label>
+                                <div class="btn-group w-100" role="group">
+                                    <button type="button" class="btn btn-outline-primary" @onclick="() => EstablecerDiasPrestamo(7)">7 días</button>
+                                    <button type="button" class="btn btn-outline-primary" @onclick="() => EstablecerDiasPrestamo(15)">15 días</button>
+                                    <button type="button" class="btn btn-outline-primary" @onclick="() => EstablecerDiasPrestamo(30)">30 días</button>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Observaciones</label>
+                                <InputTextArea @bind-Value="prestamo.Observaciones" class="form-control" rows="3"
+                                               placeholder="Notas adicionales sobre el préstamo..." />
+                            </div>
+
+                            <hr />
+
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary" disabled="@guardando">
+                                    @if (guardando)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Guardando...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-save"></i>
+                                        <span>Registrar Préstamo</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Prestamo prestamo = new Prestamo
+    {
+        FechaPrestamo = DateTime.Now,
+        FechaDevolucionEsperada = DateTime.Now.AddDays(15)
+    };
+
+    private List<Estudiante>? estudiantes;
+    private List<Libro>? libros;
+    private Estudiante? estudianteSeleccionado;
+    private Libro? libroSeleccionado;
+    private bool guardando = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        estudiantes = await EstudianteService.ObtenerActivosAsync();
+        libros = await LibroService.ObtenerDisponiblesAsync();
+    }
+
+    private async Task OnEstudianteSeleccionado(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int estudianteId) && estudianteId > 0)
+        {
+            estudianteSeleccionado = await EstudianteService.ObtenerPorIdAsync(estudianteId);
+        }
+        else
+        {
+            estudianteSeleccionado = null;
+        }
+    }
+
+    private async Task OnLibroSeleccionado(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int libroId) && libroId > 0)
+        {
+            libroSeleccionado = await LibroService.ObtenerPorIdAsync(libroId);
+        }
+        else
+        {
+            libroSeleccionado = null;
+        }
+    }
+
+    private int ObtenerPrestamosActivos(Estudiante estudiante)
+    {
+        return estudiante.Prestamos?.Count(p => p.Estado == "Prestado" || p.Estado == "Atrasado") ?? 0;
+    }
+
+    private void EstablecerDiasPrestamo(int dias)
+    {
+        prestamo.FechaDevolucionEsperada = prestamo.FechaPrestamo.AddDays(dias);
+    }
+
+    private async Task GuardarPrestamo()
+    {
+        guardando = true;
+        try
+        {
+            // Validaciones
+            if (prestamo.EstudianteId == 0)
+            {
+                await JS.InvokeVoidAsync("alert", "Por favor seleccione un estudiante");
+                guardando = false;
+                return;
+            }
+
+            if (prestamo.LibroId == 0)
+            {
+                await JS.InvokeVoidAsync("alert", "Por favor seleccione un libro");
+                guardando = false;
+                return;
+            }
+
+            if (prestamo.FechaDevolucionEsperada <= prestamo.FechaPrestamo)
+            {
+                await JS.InvokeVoidAsync("alert", "La fecha de devolución debe ser posterior a la fecha de préstamo");
+                guardando = false;
+                return;
+            }
+
+            // Verificar disponibilidad del libro
+            var libro = await LibroService.ObtenerPorIdAsync(prestamo.LibroId);
+            if (libro == null || libro.CantidadDisponible <= 0)
+            {
+                await JS.InvokeVoidAsync("alert", "Este libro no está disponible actualmente");
+                guardando = false;
+                return;
+            }
+
+            var resultado = await PrestamoService.CrearPrestamoAsync(prestamo);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Préstamo registrado exitosamente");
+                Navigation.NavigateTo("/prestamos");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Error al registrar el préstamo. Intente nuevamente.");
+            }
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/prestamos");
+    }
+}

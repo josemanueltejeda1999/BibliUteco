@@ -1,0 +1,204 @@
+﻿@page "/categorias/detalles/{Id:int}"
+@using BibliUteco.Models
+@using BibliUteco.Services.Interfaces
+@inject ICategoriaService CategoriaService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@attribute [Authorize]
+
+<PageTitle>Detalles de Categoría - BibliUteco</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            @if (categoria == null)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Cargando datos de la categoría...</p>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h3 class="mb-0"><i class="bi bi-folder"></i> Detalles de la Categoría</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <h5 class="text-muted mb-3">Información General</h5>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">ID</label>
+                                    <p class="mb-0">@categoria.CategoriaId</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Nombre</label>
+                                    <p class="mb-0 fs-5">@categoria.Nombre</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Estado</label>
+                                    <p class="mb-0">
+                                        @if (categoria.Activo)
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Inactivo</span>
+                                        }
+                                    </p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="fw-bold text-muted small">Fecha de Registro</label>
+                                    <p class="mb-0">@categoria.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <h5 class="text-muted mb-3">Descripción</h5>
+                                <p class="text-justify">
+                                    @(string.IsNullOrWhiteSpace(categoria.Descripcion) ? "Sin descripción disponible" : categoria.Descripcion)
+                                </p>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="mb-4">
+                            <h5 class="text-muted mb-3">
+                                <i class="bi bi-book"></i> Libros en esta Categoría
+                                <span class="badge bg-primary">@(categoria.Libros?.Count ?? 0)</span>
+                            </h5>
+
+                            @if (categoria.Libros == null || !categoria.Libros.Any())
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> Esta categoría no tiene libros registrados aún.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Título</th>
+                                                <th>Autor</th>
+                                                <th>ISBN</th>
+                                                <th>Editorial</th>
+                                                <th>Disponibles</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var libro in categoria.Libros)
+                                            {
+                                                <tr>
+                                                    <td>@libro.Titulo</td>
+                                                    <td>@libro.Autor?.NombreCompleto</td>
+                                                    <td><code>@libro.ISBN</code></td>
+                                                    <td>@libro.Editorial</td>
+                                                    <td>
+                                                        <span class="badge @(libro.CantidadDisponible > 0 ? "bg-success" : "bg-danger")">
+                                                            @libro.CantidadDisponible / @libro.CantidadTotal
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        @if (libro.Activo)
+                                                        {
+                                                            <span class="badge bg-success">Activo</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">Inactivo</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-secondary" @onclick="Volver">
+                                <i class="bi bi-arrow-left"></i> Volver
+                            </button>
+                            <div>
+                                <button class="btn btn-warning me-2" @onclick="IrAEditar">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </button>
+                                <button class="btn btn-danger" @onclick="ConfirmarEliminar">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Categoria? categoria;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarCategoria();
+    }
+
+    private async Task CargarCategoria()
+    {
+        categoria = await CategoriaService.ObtenerPorIdAsync(Id);
+
+        if (categoria == null)
+        {
+            await JS.InvokeVoidAsync("alert", "Categoría no encontrada");
+            Navigation.NavigateTo("/categorias");
+        }
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/categorias");
+    }
+
+    private void IrAEditar()
+    {
+        Navigation.NavigateTo($"/categorias/editar/{Id}");
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm",
+            $"¿Está seguro de eliminar la categoría '{categoria!.Nombre}'?");
+
+        if (confirmado)
+        {
+            var resultado = await CategoriaService.EliminarAsync(Id);
+            if (resultado)
+            {
+                await JS.InvokeVoidAsync("alert", "Categoría eliminada exitosamente");
+                Navigation.NavigateTo("/categorias");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "No se pudo eliminar la categoría. Puede que tenga libros asociados.");
+            }
+        }
+    }
+}
