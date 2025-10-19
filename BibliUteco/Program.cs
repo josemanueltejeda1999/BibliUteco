@@ -11,14 +11,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+// Registrar ApplicationDbContext usado por Identity
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
-/*builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>();*/
+
+// Usar AddIdentity para soportar roles correctamente y la UI por defecto si se necesita.
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+})
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders()
+    .AddDefaultUI();
+
+// Registrar DbContext principal de la aplicación
+
+ 
+
 
 // Registrar servicios de la aplicación
 builder.Services.AddScoped<BibliUteco.Services.Interfaces.IAutorService, BibliUteco.Services.AutorService>();
@@ -40,6 +52,7 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        // Asegúrate de que DbInitializer.Initialize tenga la firma async Task Initialize(IServiceProvider services)
         await BibliUteco.Data.DbInitializer.Initialize(services);
     }
     catch (Exception ex)
@@ -67,6 +80,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Agregar autenticación antes de autorización
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

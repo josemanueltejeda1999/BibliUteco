@@ -1,0 +1,361 @@
+﻿@page "/reportes/actividad"
+@using BibliUteco.Services.Interfaces
+@using BibliUteco.Models
+@using Microsoft.AspNetCore.Authorization
+@inject IDashboardService DashboardService
+@inject ILibroService LibroService
+@inject IEstudianteService EstudianteService
+@inject IPrestamoService PrestamoService
+@inject NavigationManager Navigation
+@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+
+<PageTitle>Reporte de Actividad - BibliUteco</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-0" style="color: #2E7D32;">
+                    <i class="bi bi-graph-up"></i> Reporte de Actividad General
+                </h2>
+                <p class="text-muted mb-0">Resumen completo de la actividad del sistema</p>
+            </div>
+            <button class="btn btn-secondary" @onclick="Volver">
+                <i class="bi bi-arrow-left"></i> Volver
+            </button>
+        </div>
+    </div>
+
+    @if (cargando)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Generando reporte...</p>
+        </div>
+    }
+    else if (estadisticas != null)
+    {
+        <!-- Fecha del Reporte -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="bi bi-calendar3"></i>
+                    <strong>Fecha del reporte:</strong> @DateTime.Now.ToString("dddd, dd MMMM yyyy HH:mm", new System.Globalization.CultureInfo("es-ES"))
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen General -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card section-card">
+                    <div class="section-card-header" style="background-color: #2E7D32;">
+                        <h5 class="mb-0 text-white">
+                            <i class="bi bi-clipboard-data"></i> Resumen General del Sistema
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h3 class="mb-0" style="color: #2E7D32;">@estadisticas.TotalLibros</h3>
+                                    <small class="text-muted">Libros Totales</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h3 class="mb-0 text-success">@estadisticas.LibrosDisponibles</h3>
+                                    <small class="text-muted">Libros Disponibles</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h3 class="mb-0 text-danger">@estadisticas.LibrosPrestados</h3>
+                                    <small class="text-muted">Libros Prestados</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h3 class="mb-0 text-info">@porcentajeDisponibilidad.ToString("N1")%</h3>
+                                    <small class="text-muted">Disponibilidad</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas de Estudiantes -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card section-card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-people"></i> Estudiantes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6 mb-3">
+                                <h4 class="mb-0">@estadisticas.TotalEstudiantes</h4>
+                                <small class="text-muted">Total Registrados</small>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <h4 class="mb-0 text-success">@estadisticas.EstudiantesActivos</h4>
+                                <small class="text-muted">Con Préstamos Activos</small>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Tasa de actividad:</span>
+                            <strong class="text-primary">@tasaActividadEstudiantes.ToString("N1")%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas de Préstamos -->
+            <div class="col-lg-6">
+                <div class="card section-card h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Préstamos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4 mb-3">
+                                <h4 class="mb-0">@estadisticas.TotalPrestamos</h4>
+                                <small class="text-muted">Total Histórico</small>
+                            </div>
+                            <div class="col-4 mb-3">
+                                <h4 class="mb-0 text-warning">@estadisticas.PrestamosActivos</h4>
+                                <small class="text-muted">Activos</small>
+                            </div>
+                            <div class="col-4 mb-3">
+                                <h4 class="mb-0 text-danger">@estadisticas.PrestamosAtrasados</h4>
+                                <small class="text-muted">Atrasados</small>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Tasa de retraso:</span>
+                            <strong class="text-danger">@tasaRetraso.ToString("N1")%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas de Multas -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card section-card">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="bi bi-cash-coin"></i> Estado de Multas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <h3 class="mb-0 text-danger">RD$ @estadisticas.TotalMultasPendientes.ToString("N2")</h3>
+                                <small class="text-muted">Multas Pendientes de Pago</small>
+                            </div>
+                            <div class="col-md-4">
+                                <h3 class="mb-0">@estadisticas.PrestamosAtrasados</h3>
+                                <small class="text-muted">Préstamos con Multa</small>
+                            </div>
+                            <div class="col-md-4">
+                                <h3 class="mb-0">RD$ @promedioMulta.ToString("N2")</h3>
+                                <small class="text-muted">Promedio por Multa</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Catálogo -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card section-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-bookshelf"></i> Catálogo Bibliográfico</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="p-3">
+                                    <h4 class="mb-0">@estadisticas.TotalAutores</h4>
+                                    <small class="text-muted">Autores</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3">
+                                    <h4 class="mb-0">@estadisticas.TotalCategorias</h4>
+                                    <small class="text-muted">Categorías</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3">
+                                    <h4 class="mb-0">@promedioLibrosPorCategoria.ToString("N1")</h4>
+                                    <small class="text-muted">Libros por Categoría</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3">
+                                    <h4 class="mb-0">@promedioLibrosPorAutor.ToString("N1")</h4>
+                                    <small class="text-muted">Libros por Autor</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Préstamos por Mes -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card section-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-bar-chart-line"></i> Actividad Mensual (Últimos 6 meses)</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (prestamosPorMes != null && prestamosPorMes.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mes</th>
+                                            <th class="text-center">Préstamos</th>
+                                            <th class="text-center">Devoluciones</th>
+                                            <th class="text-center">Pendientes</th>
+                                            <th>Tasa de Devolución</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var mes in prestamosPorMes)
+                                        {
+                                            var pendientes = mes.CantidadPrestamos - mes.CantidadDevoluciones;
+                                            var tasaDevolucion = mes.CantidadPrestamos > 0
+                                            ? (mes.CantidadDevoluciones * 100.0 / mes.CantidadPrestamos)
+                                            : 0;
+                                            <tr>
+                                                <td><strong>@mes.NombreMes @mes.Año</strong></td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-primary badge-modern">@mes.CantidadPrestamos</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-success badge-modern">@mes.CantidadDevoluciones</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-warning text-dark badge-modern">@pendientes</span>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress flex-grow-1 me-2" style="height: 10px;">
+                                                            <div class="progress-bar bg-success"
+                                                                 style="width: @tasaDevolucion%"
+                                                                 role="progressbar">
+                                                            </div>
+                                                        </div>
+                                                        <span class="text-muted small">@tasaDevolucion.ToString("N1")%</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="row">
+            <div class="col-12 text-center">
+                <button class="btn btn-success btn-lg me-2" @onclick="ImprimirReporte">
+                    <i class="bi bi-printer"></i> Imprimir Reporte
+                </button>
+                <button class="btn btn-primary btn-lg" @onclick="ExportarPDF">
+                    <i class="bi bi-file-pdf"></i> Exportar a PDF
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private EstadisticasGenerales? estadisticas;
+    private List<PrestamosPorMes>? prestamosPorMes;
+    private bool cargando = true;
+
+    private double porcentajeDisponibilidad = 0;
+    private double tasaActividadEstudiantes = 0;
+    private double tasaRetraso = 0;
+    private decimal promedioMulta = 0;
+    private double promedioLibrosPorCategoria = 0;
+    private double promedioLibrosPorAutor = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        cargando = true;
+
+        estadisticas = await DashboardService.ObtenerEstadisticasGeneralesAsync();
+        prestamosPorMes = await DashboardService.ObtenerPrestamosPorMesAsync(6);
+
+        // Calcular métricas
+        if (estadisticas != null)
+        {
+            porcentajeDisponibilidad = estadisticas.TotalLibros > 0
+                ? (estadisticas.LibrosDisponibles * 100.0 / estadisticas.TotalLibros)
+                : 0;
+
+            tasaActividadEstudiantes = estadisticas.TotalEstudiantes > 0
+                ? (estadisticas.EstudiantesActivos * 100.0 / estadisticas.TotalEstudiantes)
+                : 0;
+
+            tasaRetraso = estadisticas.PrestamosActivos > 0
+                ? (estadisticas.PrestamosAtrasados * 100.0 / estadisticas.PrestamosActivos)
+                : 0;
+
+            promedioMulta = estadisticas.PrestamosAtrasados > 0
+                ? (estadisticas.TotalMultasPendientes / estadisticas.PrestamosAtrasados)
+                : 0;
+
+            promedioLibrosPorCategoria = estadisticas.TotalCategorias > 0
+                ? (estadisticas.TotalLibros * 1.0 / estadisticas.TotalCategorias)
+                : 0;
+
+            promedioLibrosPorAutor = estadisticas.TotalAutores > 0
+                ? (estadisticas.TotalLibros * 1.0 / estadisticas.TotalAutores)
+                : 0;
+        }
+
+        cargando = false;
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/reportes");
+    }
+
+    private void ImprimirReporte()
+    {
+        // Implementar impresión con JavaScript
+        // Por ahora mostraremos un mensaje
+    }
+
+    private void ExportarPDF()
+    {
+        // Implementar exportación a PDF
+        // Por ahora mostraremos un mensaje
+    }
+}

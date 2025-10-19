@@ -120,6 +120,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJlc3RhbW9zXEluZGV4LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Reportes/Actividad.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0ZXNcQWN0aXZpZGFkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Usuarios/AsignarRol.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXN1YXJpb3NcQXNpZ25hclJvbC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

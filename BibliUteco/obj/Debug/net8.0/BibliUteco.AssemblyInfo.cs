@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BibliUteco")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+14c1e4509f96700509e404b4d68ddb13849a5adc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+67a38ef12761867cb2d90ef58c08e844e967c1f5")]
 [assembly: System.Reflection.AssemblyProductAttribute("BibliUteco")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BibliUteco")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

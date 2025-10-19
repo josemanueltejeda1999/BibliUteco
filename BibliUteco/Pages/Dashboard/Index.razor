@@ -11,15 +11,15 @@
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
-            <h2 class="fw-bold mb-0">📊 Dashboard</h2>
-            <p class="text-muted mb-0">Resumen general del sistema</p>
+            <h1 class="display-6 fw-bold mb-0" style="color: #2E7D32;">Dashboard</h1>
+            <p class="text-muted">Resumen general del sistema de biblioteca</p>
         </div>
     </div>
 
     @if (cargando)
     {
         <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
+            <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
                 <span class="visually-hidden">Cargando...</span>
             </div>
             <p class="mt-3 text-muted">Cargando estadísticas...</p>
@@ -35,78 +35,82 @@
     }
     else if (estadisticas != null)
     {
-        <!-- Tarjetas de Estadísticas Principales -->
-        <div class="row g-4 mb-4">
+        <!-- Tarjetas Principales Estilo Moderno -->
+        <div class="row g-4 mb-4 fade-in-up">
+            <!-- Tarjeta Libros -->
             <div class="col-xl-3 col-md-6">
-                <div class="card border-start border-primary border-4 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <div class="text-muted small">Total de Libros</div>
-                                <div class="h3 mb-0">@estadisticas.TotalLibros</div>
-                                <div class="small text-success">
-                                    <i class="bi bi-check-circle"></i> @estadisticas.LibrosDisponibles disponibles
+                <div class="card dashboard-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="dashboard-card-title">Libros</div>
+                                <div class="dashboard-card-value">@estadisticas.TotalLibros.ToString("N0")</div>
+                                <div class="dashboard-card-subtitle">
+                                    @estadisticas.LibrosDisponibles disponibles
                                 </div>
                             </div>
-                            <div class="ms-3">
-                                <i class="bi bi-book text-primary" style="font-size: 2.5rem;"></i>
+                            <div class="dashboard-card-icon green">
+                                <i class="bi bi-book"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Tarjeta Préstamos -->
             <div class="col-xl-3 col-md-6">
-                <div class="card border-start border-success border-4 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <div class="text-muted small">Estudiantes</div>
-                                <div class="h3 mb-0">@estadisticas.TotalEstudiantes</div>
-                                <div class="small text-success">
-                                    <i class="bi bi-person-check"></i> @estadisticas.EstudiantesActivos con préstamos
+                <div class="card dashboard-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="dashboard-card-title">Préstamos</div>
+                                <div class="dashboard-card-value">@estadisticas.PrestamosActivos.ToString("N0")</div>
+                                <div class="dashboard-card-subtitle">
+                                    @estadisticas.PrestamosAtrasados atrasados
                                 </div>
                             </div>
-                            <div class="ms-3">
-                                <i class="bi bi-people text-success" style="font-size: 2.5rem;"></i>
+                            <div class="dashboard-card-icon blue">
+                                <i class="bi bi-clipboard-check"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Tarjeta Categorías -->
             <div class="col-xl-3 col-md-6">
-                <div class="card border-start border-warning border-4 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <div class="text-muted small">Préstamos Activos</div>
-                                <div class="h3 mb-0">@estadisticas.PrestamosActivos</div>
-                                <div class="small text-warning">
-                                    <i class="bi bi-exclamation-triangle"></i> @estadisticas.PrestamosAtrasados atrasados
+                <div class="card dashboard-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="dashboard-card-title">Categorías</div>
+                                <div class="dashboard-card-value">@estadisticas.TotalCategorias.ToString("N0")</div>
+                                <div class="dashboard-card-subtitle">
+                                    @estadisticas.TotalAutores autores
                                 </div>
                             </div>
-                            <div class="ms-3">
-                                <i class="bi bi-clipboard-check text-warning" style="font-size: 2.5rem;"></i>
+                            <div class="dashboard-card-icon orange">
+                                <i class="bi bi-folder"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Tarjeta Estudiantes (Lectores) -->
             <div class="col-xl-3 col-md-6">
-                <div class="card border-start border-danger border-4 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <div class="text-muted small">Multas Pendientes</div>
-                                <div class="h3 mb-0">RD$ @estadisticas.TotalMultasPendientes.ToString("N2")</div>
-                                <div class="small text-danger">
-                                    <i class="bi bi-cash"></i> Por cobrar
+                <div class="card dashboard-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="dashboard-card-title">Estudiantes</div>
+                                <div class="dashboard-card-value">@estadisticas.TotalEstudiantes.ToString("N0")</div>
+                                <div class="dashboard-card-subtitle">
+                                    @estadisticas.EstudiantesActivos activos
                                 </div>
                             </div>
-                            <div class="ms-3">
-                                <i class="bi bi-exclamation-circle text-danger" style="font-size: 2.5rem;"></i>
+                            <div class="dashboard-card-icon purple">
+                                <i class="bi bi-people"></i>
                             </div>
                         </div>
                     </div>
@@ -114,14 +118,225 @@
             </div>
         </div>
 
-        <div class="alert alert-success">
-            <strong>Dashboard cargado exitosamente!</strong> Las estadísticas básicas funcionan correctamente.
+        <!-- Gráfico de Préstamos por Mes -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card section-card">
+                    <div class="section-card-header" style="background-color: #2E7D32;">
+                        <h5 class="mb-0 text-white">
+                            <i class="bi bi-bar-chart me-2"></i>Préstamos por Mes
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (prestamosPorMes != null && prestamosPorMes.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mes</th>
+                                            <th>Préstamos</th>
+                                            <th>Devoluciones</th>
+                                            <th style="width: 40%;">Progreso</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var mes in prestamosPorMes)
+                                        {
+                                            var porcentaje = mes.CantidadPrestamos > 0
+                                            ? (mes.CantidadDevoluciones * 100 / mes.CantidadPrestamos)
+                                            : 0;
+                                            <tr>
+                                                <td><strong>@mes.NombreMes @mes.Año</strong></td>
+                                                <td>
+                                                    <span class="badge bg-primary badge-modern">@mes.CantidadPrestamos</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-success badge-modern">@mes.CantidadDevoluciones</span>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress flex-grow-1 me-3" style="height: 10px;">
+                                                            <div class="progress-bar"
+                                                                 style="width: @porcentaje%; background-color: #2E7D32;"
+                                                                 role="progressbar"
+                                                                 aria-valuenow="@porcentaje"
+                                                                 aria-valuemin="0"
+                                                                 aria-valuemax="100">
+                                                            </div>
+                                                        </div>
+                                                        <span class="text-muted small">@porcentaje%</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center py-4">No hay datos disponibles</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top 10 Libros y Estudiantes -->
+        <div class="row g-4 mb-4">
+            <!-- Top 10 Libros -->
+            <div class="col-lg-6">
+                <div class="card section-card h-100">
+                    <div class="section-card-header" style="background-color: #F57C00;">
+                        <h5 class="mb-0 text-white">
+                            <i class="bi bi-trophy me-2"></i>Top 10 Libros Más Prestados
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (librosMasPrestados != null && librosMasPrestados.Any())
+                        {
+                            @for (int i = 0; i < librosMasPrestados.Count; i++)
+                            {
+                                var libro = librosMasPrestados[i];
+                                <div class="d-flex align-items-center py-3 @(i < librosMasPrestados.Count - 1 ? "border-bottom" : "")">
+                                    <div class="me-3">
+                                        <div class="badge bg-warning text-dark" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold;">
+                                            #@(i + 1)
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold">@libro.Titulo</div>
+                                        <small class="text-muted">@libro.Autor</small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-primary badge-modern">@libro.CantidadPrestamos</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center py-4">No hay datos disponibles</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 10 Estudiantes -->
+            <div class="col-lg-6">
+                <div class="card section-card h-100">
+                    <div class="section-card-header" style="background-color: #1976D2;">
+                        <h5 class="mb-0 text-white">
+                            <i class="bi bi-star me-2"></i>Top 10 Estudiantes Más Activos
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (estudiantesMasPrestamos != null && estudiantesMasPrestamos.Any())
+                        {
+                            @for (int i = 0; i < estudiantesMasPrestamos.Count; i++)
+                            {
+                                var estudiante = estudiantesMasPrestamos[i];
+                                <div class="d-flex align-items-center py-3 @(i < estudiantesMasPrestamos.Count - 1 ? "border-bottom" : "")">
+                                    <div class="me-3">
+                                        <div class="badge" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold; background-color: #2E7D32; color: white;">
+                                            #@(i + 1)
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold">@estudiante.NombreCompleto</div>
+                                        <small class="text-muted">@estudiante.Matricula</small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-primary badge-modern">@estudiante.CantidadPrestamos</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center py-4">No hay datos disponibles</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Préstamos Recientes y Próximos a Vencer -->
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card section-card">
+                    <div class="section-card-header bg-info">
+                        <h5 class="mb-0 text-white">
+                            <i class="bi bi-clock-history me-2"></i>Préstamos Recientes
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (prestamosRecientes != null && prestamosRecientes.Any())
+                        {
+                            @foreach (var prestamo in prestamosRecientes)
+                            {
+                                <div class="d-flex align-items-center py-2 border-bottom">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small">@prestamo.Estudiante?.NombreCompleto</div>
+                                        <small class="text-muted">@prestamo.Libro?.Titulo</small>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted">@prestamo.FechaPrestamo.ToString("dd/MM/yyyy")</small>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center py-4">No hay préstamos recientes</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card section-card">
+                    <div class="section-card-header bg-danger">
+                        <h5 class="mb-0 text-white">
+                            <i class="bi bi-alarm me-2"></i>Próximos a Vencer
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (prestamosProximosVencer != null && prestamosProximosVencer.Any())
+                        {
+                            @foreach (var prestamo in prestamosProximosVencer)
+                            {
+                                <div class="d-flex align-items-center py-2 border-bottom">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small">@prestamo.Estudiante?.NombreCompleto</div>
+                                        <small class="text-muted">@prestamo.Libro?.Titulo</small>
+                                    </div>
+                                    <div>
+                                        <small class="text-danger fw-bold">@prestamo.FechaDevolucionEsperada.ToString("dd/MM/yyyy")</small>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center py-4">No hay préstamos próximos a vencer</p>
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
     }
 </div>
 
 @code {
     private EstadisticasGenerales? estadisticas;
+    private List<LibroMasPrestado>? librosMasPrestados;
+    private List<EstudianteMasPrestamos>? estudiantesMasPrestamos;
+    private List<PrestamosPorMes>? prestamosPorMes;
+    private List<Prestamo>? prestamosRecientes;
+    private List<Prestamo>? prestamosProximosVencer;
+
     private bool cargando = true;
     private bool hayError = false;
     private string mensajeError = "";
@@ -140,6 +355,12 @@
         try
         {
             estadisticas = await DashboardService.ObtenerEstadisticasGeneralesAsync();
+            librosMasPrestados = await DashboardService.ObtenerLibrosMasPrestadosAsync(10);
+            estudiantesMasPrestamos = await DashboardService.ObtenerEstudiantesConMasPrestamosAsync(10);
+            prestamosPorMes = await DashboardService.ObtenerPrestamosPorMesAsync(6);
+            prestamosRecientes = await DashboardService.ObtenerPrestamosRecientesAsync(10);
+            prestamosProximosVencer = await DashboardService.ObtenerPrestamosProximosAVencerAsync(3);
+
             cargando = false;
         }
         catch (Exception ex)

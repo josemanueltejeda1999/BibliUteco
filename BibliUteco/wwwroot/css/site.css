@@ -66,3 +66,226 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+/* ========================================
+   ESTILOS PERSONALIZADOS BIBLIUTECO
+   ======================================== */
+
+/* Color verde principal de BibliUteco */
+.bg-bibliuteco {
+    background-color: #2E7D32 !important;
+}
+
+/* Menú lateral personalizado */
+.nav-scrollable {
+    background-color: #2E7D32 !important;
+    height: 100vh;
+}
+
+/* Enlaces del menú */
+.nav-link-custom {
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 12px 16px !important;
+    margin: 4px 0 !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+    .nav-link-custom:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: white !important;
+        transform: translateX(5px);
+    }
+
+    .nav-link-custom.active {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+        font-weight: 600;
+    }
+
+/* Iconos del menú */
+.nav-icon {
+    font-size: 1.2rem;
+    margin-right: 12px;
+    width: 24px;
+    text-align: center;
+}
+
+.nav-text {
+    font-size: 0.95rem;
+}
+
+/* Sección de información del usuario */
+.user-info-section {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.user-avatar i {
+    font-size: 2rem;
+}
+
+/* ========================================
+   DASHBOARD - TARJETAS MODERNAS
+   ======================================== */
+
+.dashboard-card {
+    border-radius: 16px !important;
+    border: none !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07) !important;
+    transition: all 0.3s ease !important;
+    overflow: hidden;
+}
+
+    .dashboard-card:hover {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
+        transform: translateY(-4px);
+    }
+
+.dashboard-card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+    .dashboard-card-icon.green {
+        background-color: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    .dashboard-card-icon.blue {
+        background-color: #E3F2FD;
+        color: #1976D2;
+    }
+
+    .dashboard-card-icon.orange {
+        background-color: #FFF3E0;
+        color: #F57C00;
+    }
+
+    .dashboard-card-icon.purple {
+        background-color: #F3E5F5;
+        color: #7B1FA2;
+    }
+
+.dashboard-card-title {
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.dashboard-card-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+}
+
+.dashboard-card-subtitle {
+    font-size: 0.85rem;
+    color: #999;
+    margin-top: 8px;
+}
+
+/* ========================================
+   TARJETAS DE SECCIONES
+   ======================================== */
+
+.section-card {
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.section-card-header {
+    border-radius: 12px 12px 0 0 !important;
+    padding: 16px 20px !important;
+    border: none !important;
+}
+
+/* ========================================
+   TABLA MODERNA
+   ======================================== */
+
+.modern-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+    .modern-table thead th {
+        background-color: #F5F5F5;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #666;
+        border: none;
+        padding: 12px 16px;
+    }
+
+    .modern-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+        .modern-table tbody tr:hover {
+            background-color: #F9F9F9;
+        }
+
+    .modern-table tbody td {
+        border-top: 1px solid #EEEEEE;
+        padding: 12px 16px;
+        vertical-align: middle;
+    }
+
+/* ========================================
+   BADGES MODERNOS
+   ======================================== */
+
+.badge-modern {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.8rem;
+}
+
+/* ========================================
+   ANIMACIONES
+   ======================================== */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+    .dashboard-card-value {
+        font-size: 2rem;
+    }
+
+    .dashboard-card-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+}
