@@ -1,0 +1,264 @@
+@page "/multas"
+@using BibliUteco.Services.Interfaces
+@using BibliUteco.Models
+@using BibliUteco.Services
+@inject IMultaService MultaService
+@inject IJSRuntime JS
+@inject ToastService ToastService
+@inject NavigationManager Navigation
+@inject ILogger<BibliUteco.Pages.Multas.Index> Logger
+@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-primary">
+                <i class="bi bi-cash-coin"></i> Gestión de Multas
+            </h2>
+        </div>
+    </div>
+
+    @if (cargando)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Resumen de Multas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="card-title">@resumen.TotalMultas</h3>
+                        <p class="card-text text-muted">Multas Totales</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3 class="card-title">@resumen.MultasPagadas</h3>
+                        <p class="card-text">Multas Pagadas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h3 class="card-title">@resumen.MultasPendientes</h3>
+                        <p class="card-text">Multas Pendientes</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning">
+                    <div class="card-body text-center">
+                        <h3 class="card-title">@($"RD$ {resumen.MontoTotalPendiente:N2}")</h3>
+                        <p class="card-text">Monto Pendiente</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" placeholder="Buscar por estudiante..."
+                           @bind="filtroEstudiante" @bind:event="oninput">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" @bind="filtroEstado">
+                    <option value="">Todos los estados</option>
+                    <option value="Pendiente">Pendientes</option>
+                    <option value="Pagada">Pagadas</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tabla de Multas -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Estudiante</th>
+                        <th>Libro</th>
+                        <th>Días Retraso</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Fecha Generada</th>
+                        <th>Método Pago</th>
+                        <th>Fecha Pago</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var multa in multasFiltradas)
+                    {
+                        <tr>
+                            <td>@multa.Prestamo?.Estudiante?.NombreCompleto</td>
+                            <td>@multa.Prestamo?.Libro?.Titulo</td>
+                            <td>@($"{multa.DiasRetraso} días")</td>
+                            <td>@($"RD$ {multa.Monto:N2}")</td>
+                            <td>
+                                <span class="badge @(string.Equals(multa.Estado, "Pagada", StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-danger")">
+                                    @multa.Estado
+                                </span>
+                            </td>
+                            <td>@(multa.FechaGenerada.ToString("dd/MM/yyyy"))</td>
+                            <td>@(multa.MetodoPago ?? "-")</td>
+                            <td>@(multa.FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            <td>
+                                @if (string.Equals(multa.Estado, "Pendiente", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <button class="btn btn-primary btn-sm" @onclick="() => MostrarModalPago(multa)">
+                                        <i class="bi bi-cash"></i> Pagar
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-secondary btn-sm" @onclick="() => GenerarComprobante(multa)">
+                                        <i class="bi bi-file-pdf"></i> Comprobante
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- Modal de Pago -->
+@if (multaSeleccionada != null)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Pago de Multa</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Estudiante</label>
+                        <input type="text" class="form-control" readonly 
+                               value="@multaSeleccionada.Prestamo?.Estudiante?.NombreCompleto" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Monto a Pagar</label>
+                        <input type="text" class="form-control" readonly 
+                               value="@($"RD$ {multaSeleccionada.Monto:N2}")" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Método de Pago</label>
+                        <select class="form-select" @bind="metodoPagoSeleccionado">
+                            <option value="">Seleccione método de pago</option>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                            <option value="Transferencia">Transferencia</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="ProcesarPago"
+                            disabled="@string.IsNullOrEmpty(metodoPagoSeleccionado)">
+                        Confirmar Pago
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show"></div>
+    </div>
+}
+
+@code {
+    private bool cargando = true;
+    private List<Multa> multas = new();
+    private MultasResumen resumen = new();
+    private string filtroEstudiante = "";
+    private string filtroEstado = "";
+    private Multa? multaSeleccionada;
+    private string metodoPagoSeleccionado = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            // traer todas las multas para la tabla
+            multas = await MultaService.ObtenerTodasAsync();
+
+            // comprobar pendientes directo (diagnóstico)
+            var pendientesDirecto = await MultaService.ObtenerPendientesAsync();
+            Logger.LogInformation("Pendientes directos desde servicio: {Count}", pendientesDirecto.Count);
+
+            resumen = await MultaService.ObtenerResumenMultasAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error cargando datos de multas");
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
+    }
+
+    private IEnumerable<Multa> multasFiltradas => multas
+        .Where(m => string.IsNullOrEmpty(filtroEstudiante) ||
+                    (m.Prestamo?.Estudiante?.NombreCompleto ?? "")
+                        .Contains(filtroEstudiante, StringComparison.OrdinalIgnoreCase))
+        .Where(m => string.IsNullOrEmpty(filtroEstado) ||
+                    string.Equals(m.Estado, filtroEstado, StringComparison.OrdinalIgnoreCase));
+
+    private void MostrarModalPago(Multa multa)
+    {
+        multaSeleccionada = multa;
+        metodoPagoSeleccionado = "";
+    }
+
+    private void CerrarModal()
+    {
+        multaSeleccionada = null;
+        metodoPagoSeleccionado = "";
+    }
+
+    private async Task ProcesarPago()
+    {
+        if (multaSeleccionada == null || string.IsNullOrEmpty(metodoPagoSeleccionado)) return;
+
+        var resultado = await MultaService.PagarMultaAsync(multaSeleccionada.MultaId, metodoPagoSeleccionado);
+        if (resultado)
+        {
+            ToastService.ShowToast("Pago registrado exitosamente", "Éxito", "success");
+            await CargarDatos();
+            CerrarModal();
+        }
+        else
+        {
+            ToastService.ShowToast("Error al procesar el pago", "Error", "error");
+        }
+    }
+
+    private void GenerarComprobante(Multa multa)
+    {
+        var url = $"/api/multas/{multa.MultaId}/comprobante";
+        Navigation.NavigateTo(url, true);
+    }
+}

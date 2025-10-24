@@ -1,13 +1,19 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
 @inject UserManager<IdentityUser> UserManager
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AuthenticationStateProvider AuthStateProvider
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager Navigation
 
 <div class="top-row ps-3 navbar navbar-dark bg-bibliuteco">
-    <div class="container-fluid">
+    <div class="container-fluid d-flex align-items-center">
         <a class="navbar-brand text-white fw-bold fs-4" href="">BibliUTECO</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+
+        <div class="d-flex align-items-center ms-auto">
+            <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -99,6 +105,13 @@
                     <span class="nav-text">Reportes</span>
                 </NavLink>
             </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link nav-link-custom" href="multas">
+                    <span class="nav-icon bi bi-cash-coin" aria-hidden="true"></span>
+                    <span class="nav-text">Multas</span>
+                </NavLink>
+            </div>
         </AuthorizeView>
     </nav>
 </div>
@@ -106,35 +119,39 @@
 @code {
     private bool collapseNavMenu = true;
 
-    // CORRECCIÓN: devolver "collapse" cuando esté colapsado y "collapse show" cuando esté abierto
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : "collapse show";
 
     private string? rolActual;
+    private bool cargandoRol;
+
+    private static readonly SemaphoreSlim _rolesLock = new SemaphoreSlim(1,1);
 
     protected override async Task OnParametersSetAsync()
     {
-        await base.OnParametersSetAsync();
-
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (user.Identity?.IsAuthenticated == true)
+        await _rolesLock.WaitAsync();
+        try
         {
-            var userName = user.Identity.Name ?? string.Empty;
-            var usuario = await UserManager.FindByNameAsync(userName);
-            if (usuario != null)
+            if (cargandoRol) // evita reentrada concurrente
+                return;
+
+            cargandoRol = true;
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
             {
-                var roles = await UserManager.GetRolesAsync(usuario);
-                rolActual = roles.FirstOrDefault();
+                // Obtener primer role (o ajusta si esperas varios)
+                rolActual = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
             }
             else
             {
                 rolActual = null;
             }
         }
-        else
+        finally
         {
-            rolActual = null;
+            cargandoRol = false;
+            _rolesLock.Release();
         }
     }
 

@@ -1,0 +1,66 @@
+@page "/reportes/estudiantes-mas-prestamos"
+@using BibliUteco.Services.Interfaces
+@using BibliUteco.Models
+@inject IDashboardService DashboardService
+@inject IJSRuntime JS
+
+<h3>Estudiantes con más préstamos</h3>
+
+@if (cargando)
+{
+    <p>Cargando...</p>
+}
+else if (estudiantes != null && estudiantes.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Matrícula</th>
+                <th class="text-end">Total préstamos</th>
+                <th class="text-end">Activos</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var e in estudiantes)
+            {
+                <tr>
+                    <td>@e.NombreCompleto</td>
+                    <td>@e.Matricula</td>
+                    <td class="text-end">@e.CantidadPrestamos</td>
+                    <td class="text-end">@e.PrestamosActivos</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No hay datos.</p>
+}
+
+<div class="mt-3">
+    <button class="btn btn-secondary me-2" @onclick="ImprimirReporte">Imprimir</button>
+    <button class="btn btn-primary" @onclick="ExportarPDF">Exportar PDF</button>
+</div>
+
+@code {
+    private List<EstudianteMasPrestamos>? estudiantes;
+    private bool cargando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        estudiantes = await DashboardService.ObtenerEstudiantesConMasPrestamosAsync(20);
+        cargando = false;
+    }
+
+    private async Task ImprimirReporte()
+    {
+        await JS.InvokeVoidAsync("reportes.imprimir");
+    }
+
+    private async Task ExportarPDF()
+    {
+        await JS.InvokeVoidAsync("reportes.exportarPdf");
+    }
+}

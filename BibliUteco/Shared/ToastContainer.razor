@@ -1,0 +1,54 @@
+@using BibliUteco.Services
+@inject ToastService ToastService
+
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+    @foreach (var t in toasts)
+    {
+        <div class="toast show @GetToastBg(t.Type) mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">@t.Title</strong>
+                <small class="text-muted">ahora</small>
+                <button type="button" class="btn-close ms-2 mb-1" aria-label="Close" @onclick="() => Close(t.Id)"></button>
+            </div>
+            <div class="toast-body">
+                @t.Message
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ToastMessage> toasts = new();
+
+    protected override void OnInitialized()
+    {
+        ToastService.OnShow += Show;
+        ToastService.OnHide += Hide;
+    }
+
+    private void Show(ToastMessage msg)
+    {
+        toasts.Add(msg);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Hide(Guid id)
+    {
+        var item = toasts.Find(x => x.Id == id);
+        if (item != null)
+        {
+            toasts.Remove(item);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void Close(Guid id) => ToastService.HideToast(id);
+
+    private string GetToastBg(string type) =>
+        type switch
+        {
+            "success" => "bg-success text-white",
+            "error" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+}                                                                                                                                                                                           

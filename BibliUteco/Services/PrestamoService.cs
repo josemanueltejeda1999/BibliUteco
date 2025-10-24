@@ -2,18 +2,23 @@
 using BibliUteco.Models;
 using BibliUteco.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging; // añadido
 
 namespace BibliUteco.Services
 {
     public class PrestamoService : IPrestamoService
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILibroService _libroService;
+        private readonly IMultaService _multaService;
+        private readonly ILibroService _libroService; // añadido
+        private readonly ILogger<PrestamoService> _logger; // añadido
 
-        public PrestamoService(ApplicationDbContext context, ILibroService libroService)
+        public PrestamoService(ApplicationDbContext context, IMultaService multaService, ILibroService libroService, ILogger<PrestamoService> logger)
         {
             _context = context;
-            _libroService = libroService;
+            _multaService = multaService;
+            _libroService = libroService; // si tu campo se llama diferente, mantén consistencia
+            _logger = logger;
         }
 
         public async Task<List<Prestamo>> ObtenerTodosAsync()
@@ -246,6 +251,37 @@ namespace BibliUteco.Services
             {
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<bool> RegistrarDevolucionAsync(int prestamoId)
+        {
+            var prestamo = await _context.Prestamos.FindAsync(prestamoId);
+            if (prestamo == null) return false;
+
+            prestamo.FechaDevolucionReal = DateTime.Now;
+
+            var diasRetraso = (int)(prestamo.FechaDevolucionReal.Value - prestamo.FechaDevolucionEsperada).TotalDays;
+            _logger.LogInformation("RegistrarDevolucionAsync: PrestamoId={PrestamoId} DiasRetraso={DiasRetraso}", prestamoId, diasRetraso);
+
+            if (diasRetraso > 0)
+            {
+                prestamo.Estado = "Atrasado";
+                // Generar multa (MultaService tiene logs)
+                await _multaService.GenerarMultaAsync(prestamo, diasRetraso);
+                _logger.LogInformation("Se solicitó generación de multa para PrestamoId={PrestamoId}", prestamoId);
+            }
+            else
+            {
+                prestamo.Estado = "Devuelto";
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> PuedeRealizarPrestamoAsync(int estudianteId)
+        {
+            return !await _multaService.TieneMultasPendientesAsync(estudianteId);
         }
     }
 }

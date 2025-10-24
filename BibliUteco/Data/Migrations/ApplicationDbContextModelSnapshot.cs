@@ -257,10 +257,10 @@ namespace BibliUteco.Data.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("bit");
 
-                    b.Property<int>("AutorId")
+                    b.Property<int?>("AnoPublicacion")
                         .HasColumnType("int");
 
-                    b.Property<int?>("AñoPublicacion")
+                    b.Property<int>("AutorId")
                         .HasColumnType("int");
 
                     b.Property<int>("CantidadDisponible")
@@ -315,6 +315,45 @@ namespace BibliUteco.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Libros");
+                });
+
+            modelBuilder.Entity("BibliUteco.Models.Multa", b =>
+                {
+                    b.Property<int>("MultaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MultaId"));
+
+                    b.Property<int>("DiasRetraso")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("FechaGenerada")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaPago")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("MetodoPago")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal>("Monto")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("PrestamoId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MultaId");
+
+                    b.HasIndex("PrestamoId");
+
+                    b.ToTable("Multas");
                 });
 
             modelBuilder.Entity("BibliUteco.Models.Prestamo", b =>
@@ -509,12 +548,10 @@ namespace BibliUteco.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -551,12 +588,10 @@ namespace BibliUteco.Data.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -583,6 +618,17 @@ namespace BibliUteco.Data.Migrations
                     b.Navigation("Autor");
 
                     b.Navigation("Categoria");
+                });
+
+            modelBuilder.Entity("BibliUteco.Models.Multa", b =>
+                {
+                    b.HasOne("BibliUteco.Models.Prestamo", "Prestamo")
+                        .WithMany()
+                        .HasForeignKey("PrestamoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Prestamo");
                 });
 
             modelBuilder.Entity("BibliUteco.Models.Prestamo", b =>

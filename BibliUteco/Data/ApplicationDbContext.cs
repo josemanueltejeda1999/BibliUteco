@@ -17,6 +17,7 @@ namespace BibliUteco.Data
         public DbSet<Libro> Libros { get; set; }
         public DbSet<Estudiante> Estudiantes { get; set; }
         public DbSet<Prestamo> Prestamos { get; set; }
+        public DbSet<Multa> Multas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

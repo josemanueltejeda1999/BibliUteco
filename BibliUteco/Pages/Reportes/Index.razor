@@ -1,0 +1,15 @@
+@page "/reportes"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+
+<h3>Reportes</h3>
+
+<p>Elige un reporte:</p>
+
+<ul class="list-unstyled">
+    <li><NavLink class="nav-link" href="reportes/actividad">Actividad general</NavLink></li>
+    <li><NavLink class="nav-link" href="reportes/libros-mas-prestados">Libros más prestados</NavLink></li>
+    <li><NavLink class="nav-link" href="reportes/estudiantes-mas-prestamos">Estudiantes con más préstamos</NavLink></li>
+    <li><NavLink class="nav-link" href="reportes/categorias-populares">Categorías más populares</NavLink></li>
+    <li><NavLink class="nav-link" href="reportes/prestamos-recientes">Préstamos recientes</NavLink></li>
+</ul>

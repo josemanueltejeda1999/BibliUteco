@@ -88,6 +88,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmV0Y2hEYXRhLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Home.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Index.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -108,6 +112,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGlicm9zXEluZGV4LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Multas/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTXVsdGFzXEluZGV4LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Prestamos/Crear.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJlc3RhbW9zXENyZWFyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -122,6 +130,26 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Reportes/Actividad.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0ZXNcQWN0aXZpZGFkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Reportes/CategoriasPopulares.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0ZXNcQ2F0ZWdvcmlhc1BvcHVsYXJlcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Reportes/EstudiantesMasPrestamos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0ZXNcRXN0dWRpYW50ZXNNYXNQcmVzdGFtb3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Reportes/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0ZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Reportes/LibrosMasPrestados.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0ZXNcTGlicm9zTWFzUHJlc3RhZG9zLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Reportes/PrestamosRecientes.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0ZXNcUHJlc3RhbW9zUmVjaWVudGVzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Blazor_Projects/BibliUteco/BibliUteco/Pages/Usuarios/AsignarRol.razor]
@@ -142,6 +170,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Blazor_Projects/BibliUteco/BibliUteco/Shared/SurveyPrompt.razor]
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFN1cnZleVByb21wdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Blazor_Projects/BibliUteco/BibliUteco/Shared/ToastContainer.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFRvYXN0Q29udGFpbmVyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Blazor_Projects/BibliUteco/BibliUteco/_Imports.razor]

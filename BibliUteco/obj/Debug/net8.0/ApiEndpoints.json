@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "ContainingType": "BibliUteco.Controllers.DevMultasController",
+    "Method": "GetMultas",
+    "RelativePath": "api/dev/multas",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "pendientes",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BibliUteco.Controllers.MultasController",
+    "Method": "DescargarComprobante",
+    "RelativePath": "api/multas/{id}/comprobante",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

@@ -11,3 +11,5 @@ wwwroot\css\open-iconic\ICON-LICENSE
 wwwroot\css\open-iconic\README.md
 wwwroot\css\site.css
 wwwroot\favicon.png
+wwwroot\js\multas.js
+wwwroot\js\reportes.js

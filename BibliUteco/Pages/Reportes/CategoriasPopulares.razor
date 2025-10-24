@@ -1,0 +1,63 @@
+@page "/reportes/categorias-populares"
+@using BibliUteco.Services.Interfaces
+ @inject IDashboardService DashboardService
+@inject IJSRuntime JS
+
+<h3>Categorías más populares</h3>
+
+@if (cargando)
+{
+    <p>Cargando...</p>
+}
+else if (categorias != null && categorias.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th class="text-end">Libros</th>
+                <th class="text-end">Préstamos</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in categorias)
+            {
+                <tr>
+                    <td>@c.Categoria</td>
+                    <td class="text-end">@c.CantidadLibros</td>
+                    <td class="text-end">@c.CantidadPrestamos</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No hay datos.</p>
+}
+
+<div class="mt-3">
+    <button class="btn btn-secondary me-2" @onclick="ImprimirReporte">Imprimir</button>
+    <button class="btn btn-primary" @onclick="ExportarPDF">Exportar PDF</button>
+</div>
+
+@code {
+    private List<CategoriaPopular>? categorias;
+    private bool cargando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categorias = await DashboardService.ObtenerCategoriasMasPopularesAsync();
+        cargando = false;
+    }
+
+    private async Task ImprimirReporte()
+    {
+        await JS.InvokeVoidAsync("reportes.imprimir");
+    }
+
+    private async Task ExportarPDF()
+    {
+        await JS.InvokeVoidAsync("reportes.exportarPdf");
+    }
+}

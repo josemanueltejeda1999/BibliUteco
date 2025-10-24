@@ -1,12 +1,17 @@
 ﻿@page "/prestamos/crear"
+@using BibliUteco.Services
 @using BibliUteco.Models
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components
 @using BibliUteco.Services.Interfaces
-@inject IPrestamoService PrestamoService
-@inject ILibroService LibroService
+
 @inject IEstudianteService EstudianteService
-@inject NavigationManager Navigation
+@inject ILibroService LibroService
+@inject IPrestamoService PrestamoService
+@inject IMultaService MultaService
 @inject IJSRuntime JS
-@attribute [Authorize(Roles = "Administrador,Bibliotecario")]
+@inject NavigationManager Navigation
+@inject ToastService ToastService
 
 <PageTitle>Crear Préstamo - BibliUteco</PageTitle>
 
@@ -226,6 +231,13 @@
             if (libro == null || libro.CantidadDisponible <= 0)
             {
                 await JS.InvokeVoidAsync("alert", "Este libro no está disponible actualmente");
+                guardando = false;
+                return;
+            }
+
+            if (await MultaService.TieneMultasPendientesAsync(prestamo.EstudianteId))
+            {
+                ToastService.ShowToast("El estudiante tiene multas pendientes. Debe pagar antes de solicitar un nuevo préstamo.", "Préstamo bloqueado", "error");
                 guardando = false;
                 return;
             }

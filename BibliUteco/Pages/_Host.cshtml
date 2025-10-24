@@ -4,33 +4,60 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>BibliUteco</title>
     <base href="~/" />
-    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
-    <link href="css/site.css" rel="stylesheet" />
+
+    <!-- 🎨 Tema Bootswatch -->
+    <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/flatly/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- 💎 Íconos Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <NavLink class="nav-link nav-link-custom" href="estadisticas">
+        <span class="nav-icon bi bi-bar-chart-line-fill" aria-hidden="true"></span>
+        <span class="nav-text">Estadísticas</span>
+    </NavLink>
+
+    <NavLink class="nav-link nav-link-custom" href="libros">
+        <i class="fa-solid fa-book"></i>
+        <span class="nav-text">Libros</span>
+    </NavLink>
+
+    
+    <!-- 🎯 Estilos personalizados -->
+    <link href="css/site.css?v=3" rel="stylesheet" />
+    
+    <!-- BibliUteco.styles.css al final -->
     <link href="BibliUteco.styles.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
-</head> 
+</head>
+
 <body>
-    <component type="typeof(App)" render-mode="ServerPrerendered" />
+    <app>
+        <component type="typeof(App)" render-mode="ServerPrerendered" />
+    </app>
 
     <div id="blazor-error-ui">
         <environment include="Staging,Production">
-            An error has occurred. This application may no longer respond until reloaded.
+            Ocurrió un error. Es posible que esta aplicación no responda hasta que se recargue.
         </environment>
         <environment include="Development">
-            An unhandled exception has occurred. See browser dev tools for details.
+            Se produjo una excepción no controlada. Consulta las herramientas de desarrollador del navegador para más detalles.
         </environment>
-        <a href="" class="reload">Reload</a>
+        <a href="" class="reload">Recargar</a>
         <a class="dismiss">🗙</a>
     </div>
 
+    <!-- ⚙️ Scripts -->
     <script src="_framework/blazor.server.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <script src="js/reportes.js"></script>
+    <script src="js/multas.js"></script>
 </body>
 </html>

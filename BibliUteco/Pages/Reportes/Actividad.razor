@@ -7,6 +7,7 @@
 @inject IEstudianteService EstudianteService
 @inject IPrestamoService PrestamoService
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 @attribute [Authorize(Roles = "Administrador,Bibliotecario")]
 
 <PageTitle>Reporte de Actividad - BibliUteco</PageTitle>
@@ -311,7 +312,6 @@
         estadisticas = await DashboardService.ObtenerEstadisticasGeneralesAsync();
         prestamosPorMes = await DashboardService.ObtenerPrestamosPorMesAsync(6);
 
-        // Calcular métricas
         if (estadisticas != null)
         {
             porcentajeDisponibilidad = estadisticas.TotalLibros > 0
@@ -340,6 +340,7 @@
         }
 
         cargando = false;
+        StateHasChanged();
     }
 
     private void Volver()
@@ -347,15 +348,13 @@
         Navigation.NavigateTo("/reportes");
     }
 
-    private void ImprimirReporte()
+    private async Task ImprimirReporte()
     {
-        // Implementar impresión con JavaScript
-        // Por ahora mostraremos un mensaje
+        await JS.InvokeVoidAsync("reportes.imprimir");
     }
 
-    private void ExportarPDF()
+    private async Task ExportarPDF()
     {
-        // Implementar exportación a PDF
-        // Por ahora mostraremos un mensaje
+        await JS.InvokeVoidAsync("reportes.exportarPdf");
     }
 }

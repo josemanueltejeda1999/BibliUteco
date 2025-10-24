@@ -2,6 +2,7 @@
 using BibliUteco.Models;
 using BibliUteco.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 
 namespace BibliUteco.Services
@@ -9,10 +10,12 @@ namespace BibliUteco.Services
     public class DashboardService : IDashboardService
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<DashboardService> _logger;
 
-        public DashboardService(ApplicationDbContext context)
+        public DashboardService(ApplicationDbContext context, ILogger<DashboardService> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<EstadisticasGenerales> ObtenerEstadisticasGeneralesAsync()
@@ -53,6 +56,7 @@ namespace BibliUteco.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error obteniendo estadísticas generales del dashboard");
                 // En caso de error, devolver estadísticas en cero
                 return new EstadisticasGenerales();
             }
@@ -86,8 +90,9 @@ namespace BibliUteco.Services
 
                 return libros;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error obteniendo libros más prestados");
                 return new List<LibroMasPrestado>();
             }
         }
@@ -119,8 +124,9 @@ namespace BibliUteco.Services
 
                 return estudiantes;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error obteniendo estudiantes con más préstamos");
                 return new List<EstudianteMasPrestamos>();
             }
         }
@@ -152,8 +158,9 @@ namespace BibliUteco.Services
 
                 return prestamosPorMes;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error obteniendo préstamos por mes");
                 return new List<PrestamosPorMes>();
             }
         }
@@ -181,8 +188,9 @@ namespace BibliUteco.Services
 
                 return categorias;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error obteniendo categorías más populares");
                 return new List<CategoriaPopular>();
             }
         }
@@ -199,8 +207,9 @@ namespace BibliUteco.Services
                     .Take(cantidad)
                     .ToListAsync();
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error obteniendo préstamos recientes");
                 return new List<Prestamo>();
             }
         }
@@ -222,8 +231,9 @@ namespace BibliUteco.Services
                     .OrderBy(p => p.FechaDevolucionEsperada)
                     .ToListAsync();
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error obteniendo préstamos próximos a vencer");
                 return new List<Prestamo>();
             }
         }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BibliUteco.Models
@@ -42,13 +43,10 @@ namespace BibliUteco.Models
         public virtual Estudiante? Estudiante { get; set; }
 
         // Propiedades computadas
-        public bool EstaAtrasado =>
-            FechaDevolucionReal == null &&
-            DateTime.Now > FechaDevolucionEsperada;
+        [NotMapped]
+        public bool EstaAtrasado => FechaDevolucionReal == null && DateTime.Now > FechaDevolucionEsperada;
 
-        public int DiasRetraso =>
-            FechaDevolucionReal == null && DateTime.Now > FechaDevolucionEsperada
-                ? (DateTime.Now - FechaDevolucionEsperada).Days
-                : 0;
+        [NotMapped]
+        public int DiasRetraso => EstaAtrasado ? (int)(DateTime.Now - FechaDevolucionEsperada).TotalDays : 0;
     }
 }

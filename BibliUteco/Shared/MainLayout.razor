@@ -1,20 +1,72 @@
-﻿@inherits LayoutComponentBase
+﻿
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+
+@inherits LayoutComponentBase
 
 <PageTitle>BibliUteco</PageTitle>
 
-<div class="page">
-    <div class="sidebar">
+<!-- Contenedor principal -->
+<div class="app-shell @(showSidebar ? "show-sidebar" : "")">
+    <!-- SIDEBAR -->
+    <aside class="sidebar bg-light border-end">
         <NavMenu />
+    </aside>
+
+    <!-- Backdrop para móviles -->
+    <div class="sidebar-backdrop" @onclick="ToggleSidebar"></div>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="main d-flex flex-column">
+        <!-- TOPBAR -->
+        <header class="topbar d-flex align-items-center justify-content-between px-3 border-bottom bg-white shadow-sm">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-link text-dark d-lg-none me-2" @onclick="ToggleSidebar" aria-label="Toggle navigation">
+                    <i class="fa-solid fa-bars fs-4"></i>
+                </button>
+                <h6 class="m-0 fw-semibold text-primary">BibliUTECO</h6>
+            </div>
+
+            <!-- Botón cerrar sesión -->
+            <div class="d-flex align-items-center">
+                <AuthorizeView>
+                    <Authorized>
+                        <button class="btn btn-outline-secondary btn-sm" @onclick="OnLogoutClicked" title="Cerrar sesión">
+                            <i class="fa-solid fa-right-from-bracket me-1"></i> Cerrar sesión
+                        </button>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a class="btn btn-primary btn-sm" href="Identity/Account/Login">
+                            <i class="fa-solid fa-right-to-bracket me-1"></i> Iniciar sesión
+                        </a>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+        </header>
+
+        <!-- ÁREA DE CONTENIDO -->
+        <main class="main-content flex-grow-1 bg-light p-3">
+            <div class="app-container h-100">
+                @Body
+            </div>
+        </main>
+
+        <!-- Toasts -->
+        <ToastContainer />
     </div>
-
-    <main>
-        <div class="top-row px-4 auth">
-            <LoginDisplay />
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
 </div>
+
+@code {
+    private bool showSidebar = false;
+
+    private void ToggleSidebar()
+    {
+        showSidebar = !showSidebar;
+    }
+
+    private void OnLogoutClicked()
+    {
+        Navigation.NavigateTo("/account/logout", true);
+    }
+}

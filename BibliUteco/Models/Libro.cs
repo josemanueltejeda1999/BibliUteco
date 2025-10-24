@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BibliUteco.Models
@@ -26,13 +28,22 @@ namespace BibliUteco.Models
         [StringLength(100)]
         public string Editorial { get; set; } = string.Empty;
 
-        public int? AñoPublicacion { get; set; }
+        // Nombre sin tilde mapeado por EF
+        public int? AnoPublicacion { get; set; }
+
+        // Alias con tilde para compatibilidad con las vistas que usan "AñoPublicacion"
+        [NotMapped]
+        public int? AñoPublicacion
+        {
+            get => AnoPublicacion;
+            set => AnoPublicacion = value;
+        }
 
         [Required]
-        public int CantidadTotal { get; set; } = 1;
+        public int CantidadTotal { get; set; }
 
         [Required]
-        public int CantidadDisponible { get; set; } = 1;
+        public int CantidadDisponible { get; set; }
 
         [StringLength(1000)]
         public string? Descripcion { get; set; }
@@ -59,6 +70,7 @@ namespace BibliUteco.Models
         public virtual ICollection<Prestamo>? Prestamos { get; set; }
 
         // Propiedad computada
+        [NotMapped]
         public bool EstaDisponible => CantidadDisponible > 0;
     }
 }
